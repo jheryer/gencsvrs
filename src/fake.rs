@@ -69,7 +69,7 @@ pub fn fake_lorem_word() -> String {
     Word(EN).fake()
 }
 
-//LOREM_SENTENSE
+//LOREM_SENTENCE
 pub fn fake_lorem_sentence() -> String {
     Sentence(EN, 1..15).fake()
 }
@@ -80,7 +80,7 @@ pub fn fake_lorem_paragraph() -> String {
 }
 
 //UUID
-pub fn fake_UUID() -> String {
+pub fn fake_uuid() -> String {
     let uuid = Uuid::new_v4();
     uuid.to_string()
 }

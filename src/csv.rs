@@ -10,6 +10,18 @@ pub fn create_default_csv(rows: usize, delimiter: char, remove_header: bool) {
     output_csv(csv_context, &mut output);
 }
 
+pub fn create_csv_with_schema(
+    schema: Vec<Schema>,
+    rows: usize,
+    delimiter: char,
+    remove_header: bool,
+) {
+    let csv_context = create_schema_csv_context(schema, rows, delimiter, remove_header);
+
+    let mut output = output::Console {};
+    output_csv(csv_context, &mut output);
+}
+
 pub fn parse_schema(input: &str) -> Vec<Schema> {
     let trimmed_input = input.trim_end_matches(',');
     let schema: Vec<Schema> = trimmed_input
@@ -19,7 +31,7 @@ pub fn parse_schema(input: &str) -> Vec<Schema> {
     return schema;
 }
 
-pub fn create_schema_csv_context(
+fn create_schema_csv_context(
     schema: Vec<Schema>,
     rows: usize,
     delimiter: char,
@@ -111,6 +123,7 @@ fn build_columns(schema: Vec<Schema>) -> Vec<ColumnContext> {
         match element.datatype.as_str() {
             "STRING" => columns.push(ColumnContext::new(element.name, fake::fake_string)),
             "INT" => columns.push(ColumnContext::new(element.name, fake::fake_int)),
+            "DIGIT" => columns.push(ColumnContext::new(element.name, fake::fake_digit)),
             "DECIMAL" => columns.push(ColumnContext::new(element.name, fake::fake_decimal)),
             "DATE" => columns.push(ColumnContext::new(element.name, fake::fake_date)),
             "TIME" => columns.push(ColumnContext::new(element.name, fake::fake_time)),
@@ -130,6 +143,7 @@ fn build_columns(schema: Vec<Schema>) -> Vec<ColumnContext> {
             "LOREM_PARAGRAPH" => {
                 columns.push(ColumnContext::new(element.name, fake::fake_lorem_paragraph))
             }
+            "UUID" => columns.push(ColumnContext::new(element.name, fake::fake_uuid)),
             _ => columns.push(ColumnContext::new(element.name, fake::unknown_string)),
         }
     }
