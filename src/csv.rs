@@ -10,7 +10,31 @@ pub fn create_default_csv(rows: usize, delimiter: char, remove_header: bool) {
     output_csv(csv_context, &mut output);
 }
 
-struct CSVContext {
+pub fn parse_schema(input: &str) -> Vec<Schema> {
+    let trimmed_input = input.trim_end_matches(',');
+    let schema: Vec<Schema> = trimmed_input
+        .split(',')
+        .filter_map(|column_str| Schema::from_string(column_str))
+        .collect();
+    return schema;
+}
+
+pub fn create_schema_csv_context(
+    schema: Vec<Schema>,
+    rows: usize,
+    delimiter: char,
+    remove_header: bool,
+) -> CSVContext {
+    let cols = build_columns(schema);
+    CSVContext {
+        rows,
+        delimiter,
+        remove_header,
+        columns: cols,
+    }
+}
+
+pub struct CSVContext {
     rows: usize,
     delimiter: char,
     remove_header: bool,
@@ -31,7 +55,7 @@ impl ColumnContext {
     }
 }
 
-struct Schema {
+pub struct Schema {
     name: String,
     datatype: String,
 }
@@ -50,14 +74,6 @@ impl Schema {
             })
         }
     }
-}
-fn parse_schema(input: &str) -> Vec<Schema> {
-    let trimmed_input = input.trim_end_matches(',');
-    let schema: Vec<Schema> = trimmed_input
-        .split(',')
-        .filter_map(|column_str| Schema::from_string(column_str))
-        .collect();
-    return schema;
 }
 
 fn output_csv<T: Output>(csv_context: CSVContext, output: &mut T) {
@@ -86,6 +102,39 @@ fn output_csv<T: Output>(csv_context: CSVContext, output: &mut T) {
         }
         output.write("\n");
     }
+}
+
+fn build_columns(schema: Vec<Schema>) -> Vec<ColumnContext> {
+    let mut columns: Vec<ColumnContext> = Vec::new();
+
+    for element in schema {
+        match element.datatype.as_str() {
+            "STRING" => columns.push(ColumnContext::new(element.name, fake::fake_string)),
+            "INT" => columns.push(ColumnContext::new(element.name, fake::fake_int)),
+            "DECIMAL" => columns.push(ColumnContext::new(element.name, fake::fake_decimal)),
+            "DATE" => columns.push(ColumnContext::new(element.name, fake::fake_date)),
+            "TIME" => columns.push(ColumnContext::new(element.name, fake::fake_time)),
+            "DATE_TIME" => columns.push(ColumnContext::new(element.name, fake::fake_date_time)),
+            "NAME" => columns.push(ColumnContext::new(element.name, fake::fake_name)),
+            "ZIP_CODE" => columns.push(ColumnContext::new(element.name, fake::fake_zipcode)),
+            "COUNTRY_CODE" => {
+                columns.push(ColumnContext::new(element.name, fake::fake_country_code))
+            }
+            "LAT" => columns.push(ColumnContext::new(element.name, fake::fake_lat)),
+            "LON" => columns.push(ColumnContext::new(element.name, fake::fake_lon)),
+            "PHONE" => columns.push(ColumnContext::new(element.name, fake::fake_phone)),
+            "LOREM_WORD" => columns.push(ColumnContext::new(element.name, fake::fake_lorem_word)),
+            "LOREM_SENTENCE" => {
+                columns.push(ColumnContext::new(element.name, fake::fake_lorem_sentence))
+            }
+            "LOREM_PARAGRAPH" => {
+                columns.push(ColumnContext::new(element.name, fake::fake_lorem_paragraph))
+            }
+            _ => columns.push(ColumnContext::new(element.name, fake::unknown_string)),
+        }
+    }
+
+    return columns;
 }
 
 fn create_default_csv_context(rows: usize, delimiter: char, remove_header: bool) -> CSVContext {
