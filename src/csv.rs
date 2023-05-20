@@ -1,7 +1,8 @@
+#[path = "./fake.rs"]
+mod fake;
 #[path = "./output.rs"]
 mod output;
 use self::output::Output;
-use fake::{Fake, Faker};
 
 pub fn create_default_csv(rows: usize, delimiter: char, remove_header: bool) {
     let csv_context = create_default_csv_context(rows, delimiter, remove_header);
@@ -28,6 +29,35 @@ impl ColumnContext {
             generator: Box::new(generator),
         }
     }
+}
+
+struct Schema {
+    name: String,
+    datatype: String,
+}
+
+impl Schema {
+    fn from_string(input: &str) -> Option<Schema> {
+        let input = input.replace(" ", "");
+        let parts: Vec<&str> = input.splitn(2, ':').collect();
+        if parts.len() != 2 {
+            println!("Bad Schema: {:?} is invalid", parts);
+            None
+        } else {
+            Some(Schema {
+                name: parts[0].trim().to_string(),
+                datatype: parts[1].trim().to_string(),
+            })
+        }
+    }
+}
+fn parse_schema(input: &str) -> Vec<Schema> {
+    let trimmed_input = input.trim_end_matches(',');
+    let schema: Vec<Schema> = trimmed_input
+        .split(',')
+        .filter_map(|column_str| Schema::from_string(column_str))
+        .collect();
+    return schema;
 }
 
 fn output_csv<T: Output>(csv_context: CSVContext, output: &mut T) {
@@ -64,21 +94,13 @@ fn create_default_csv_context(rows: usize, delimiter: char, remove_header: bool)
         delimiter,
         remove_header,
         columns: vec![
-            ColumnContext::new(String::from("col0"), value_string),
-            ColumnContext::new(String::from("col1"), value_string),
-            ColumnContext::new(String::from("col2"), value_string),
-            ColumnContext::new(String::from("col3"), value_string),
-            ColumnContext::new(String::from("col4"), value_string),
+            ColumnContext::new(String::from("col0"), fake::value_string),
+            ColumnContext::new(String::from("col1"), fake::value_string),
+            ColumnContext::new(String::from("col2"), fake::value_string),
+            ColumnContext::new(String::from("col3"), fake::value_string),
+            ColumnContext::new(String::from("col4"), fake::value_string),
         ],
     }
-}
-
-fn random_string() -> String {
-    Faker.fake::<String>()
-}
-
-fn value_string() -> String {
-    String::from("value")
 }
 
 /*
@@ -88,52 +110,50 @@ T E S T S
 
 #[test]
 fn test_create_default_csv() {
-    let csv_context = CSVContext {
-        rows: 10,
-        delimiter: ',',
-        remove_header: false,
-        columns: vec![
-            ColumnContext::new(String::from("col0"), value_string),
-            ColumnContext::new(String::from("col1"), value_string),
-            ColumnContext::new(String::from("col2"), value_string),
-            ColumnContext::new(String::from("col3"), value_string),
-        ],
+    let subject = create_default_csv_context(5, ',', false);
+    assert_eq!(5, subject.columns.len());
+    assert_eq!("col0", subject.columns.get(0).unwrap().name);
+    assert_eq!("col1", subject.columns.get(1).unwrap().name);
+    assert_eq!("col2", subject.columns.get(2).unwrap().name);
+    assert_eq!("col3", subject.columns.get(3).unwrap().name);
+    assert_eq!("col4", subject.columns.get(4).unwrap().name);
+}
+
+#[test]
+fn test_output_with_default_csv_context() {
+    let subject = create_default_csv_context(5, ',', false);
+    let mut output = output::MockConsole {
+        write_was_called: 0,
     };
 
-    // let headers: Vec<&str> = csv_context
-    //     .columns
-    //     .iter()
-    //     .map(|col| col.name.as_str())
-    //     .collect();
+    output_csv(subject, &mut output);
+    assert_eq!(60, output.write_was_called);
+}
 
-    // let header: String = csv_context
-    //     .columns
-    //     .iter()
-    //     .map(|col| col.name.as_str())
-    //     .collect::<Vec<String>>()
-    //     .join(",");
+#[test]
+fn test_happy_path_schema_parser() {
+    let input = "col1:STRING, col2:INT, col3:DATE, ";
+    let subject = parse_schema(input);
 
-    let len = csv_context.columns.len();
+    assert_eq!(3, subject.len());
+    assert_eq!("col1", subject.get(0).unwrap().name);
+    assert_eq!("STRING", subject.get(0).unwrap().datatype);
+    assert_eq!("col2", subject.get(1).unwrap().name);
+    assert_eq!("INT", subject.get(1).unwrap().datatype);
+    assert_eq!("col3", subject.get(2).unwrap().name);
+    assert_eq!("DATE", subject.get(2).unwrap().datatype);
+}
 
-    for index in 0..len {
-        if let Some(col) = csv_context.columns.get(index) {
-            print!("{}", col.name);
-            if index != len - 1 {
-                print!("{}", csv_context.delimiter);
-            }
-        }
-    }
-    print!("\n");
+#[test]
+fn test_empty_schema_has_no_results() {
+    let input = "";
+    let subject = parse_schema(input);
+    assert_eq!(0, subject.len());
+}
 
-    for _ in 0..csv_context.rows {
-        for index in 0..len {
-            if let Some(col) = csv_context.columns.get(index) {
-                print!("{}", (col.generator)());
-                if index != len - 1 {
-                    print!("{}", csv_context.delimiter);
-                }
-            }
-        }
-        print!("\n");
-    }
+#[test]
+fn test_bad_schema_has_no_results() {
+    let input = "naughtyschema,,23234kj23lk4j232lkjc 2lkj3 ";
+    let subject = parse_schema(input);
+    assert_eq!(0, subject.len());
 }

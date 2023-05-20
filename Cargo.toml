@@ -7,7 +7,8 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.3.0", features = ["derive"] }
-fake = "2.6.1"
+fake = { version = "2.6.1", features = ["chrono", "uuid"] }
+uuid = "1.3.3"
 
 [dev-dependencies]
 assert_cmd = "2.0.11"
