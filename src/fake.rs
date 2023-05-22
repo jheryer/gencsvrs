@@ -51,6 +51,14 @@ pub fn fake_zipcode() -> String {
 pub fn fake_country_code() -> String {
     CountryCode(EN).fake()
 }
+//STATE_NAME
+pub fn fake_state_name() -> String {
+    StateName(EN).fake()
+}
+//STATE_ABBR
+pub fn fake_state_abbr() -> String {
+    StateAbbr(EN).fake()
+}
 //LAT
 pub fn fake_lat() -> String {
     Latitude(EN).fake()
@@ -67,6 +75,14 @@ pub fn fake_phone() -> String {
 //LOREM_WORD
 pub fn fake_lorem_word() -> String {
     Word(EN).fake()
+}
+
+//LOREM_TITLE
+pub fn fake_lorem_title() -> String {
+    let words: Vec<String> = Words(EN, 1..4).fake();
+    let mut title: String = words.join(" ");
+    title.pop(); // return the string without the ending period
+    return title;
 }
 
 //LOREM_SENTENCE
