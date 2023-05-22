@@ -133,10 +133,13 @@ fn build_columns(schema: Vec<Schema>) -> Vec<ColumnContext> {
             "COUNTRY_CODE" => {
                 columns.push(ColumnContext::new(element.name, fake::fake_country_code))
             }
+            "STATE_NAME" => columns.push(ColumnContext::new(element.name, fake::fake_state_name)),
+            "STATE_ABBR" => columns.push(ColumnContext::new(element.name, fake::fake_state_abbr)),
             "LAT" => columns.push(ColumnContext::new(element.name, fake::fake_lat)),
             "LON" => columns.push(ColumnContext::new(element.name, fake::fake_lon)),
             "PHONE" => columns.push(ColumnContext::new(element.name, fake::fake_phone)),
             "LOREM_WORD" => columns.push(ColumnContext::new(element.name, fake::fake_lorem_word)),
+            "LOREM_TITLE" => columns.push(ColumnContext::new(element.name, fake::fake_lorem_title)),
             "LOREM_SENTENCE" => {
                 columns.push(ColumnContext::new(element.name, fake::fake_lorem_sentence))
             }
