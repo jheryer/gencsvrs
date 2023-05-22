@@ -79,10 +79,8 @@ pub fn fake_lorem_word() -> String {
 
 //LOREM_TITLE
 pub fn fake_lorem_title() -> String {
-    let words: Vec<String> = Words(EN, 1..4).fake();
-    let mut title: String = words.join(" ");
-    title.pop(); // return the string without the ending period
-    return title;
+    let title: Vec<String> = Words(EN, 1..4).fake();
+    title.join(" ")
 }
 
 //LOREM_SENTENCE
