@@ -80,7 +80,8 @@ pub fn fake_lorem_word() -> String {
 //LOREM_TITLE
 pub fn fake_lorem_title() -> String {
     let title: Vec<String> = Words(EN, 1..4).fake();
-    title.join(" ")
+    let cap_title: Vec<String> = title.iter().map(|s| s[0..1].to_uppercase() + &s[1..]).collect();
+    cap_title.join(" ")
 }
 
 //LOREM_SENTENCE
