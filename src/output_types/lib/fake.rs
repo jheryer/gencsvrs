@@ -18,6 +18,11 @@ pub fn fake_int() -> String {
     let x = (0..4294967295).fake::<u32>().to_string();
     return x;
 }
+
+pub fn fake_int_i32() -> i32 {
+    return (0..2147483647).fake::<i32>();
+}
+
 pub fn fake_digit() -> String {
     Digit(EN).fake()
 }

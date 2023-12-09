@@ -27,3 +27,37 @@ pub fn parse_schema(input: &str) -> Vec<Schema> {
         .collect();
     return schema;
 }
+
+#[cfg(test)]
+mod test {
+
+    use super::*;
+
+    #[test]
+    fn test_happy_path_schema_parser() {
+        let input = "col1:STRING, col2:INT, col3:DATE, ";
+        let subject = parse_schema(input);
+
+        assert_eq!(3, subject.len());
+        assert_eq!("col1", subject.get(0).unwrap().name);
+        assert_eq!("STRING", subject.get(0).unwrap().datatype);
+        assert_eq!("col2", subject.get(1).unwrap().name);
+        assert_eq!("INT", subject.get(1).unwrap().datatype);
+        assert_eq!("col3", subject.get(2).unwrap().name);
+        assert_eq!("DATE", subject.get(2).unwrap().datatype);
+    }
+
+    #[test]
+    fn test_empty_schema_has_no_results() {
+        let input = "";
+        let subject = parse_schema(input);
+        assert_eq!(0, subject.len());
+    }
+
+    #[test]
+    fn test_bad_schema_has_no_results() {
+        let input = "naughtyschema,,23234kj23lk4j232lkjc 2lkj3 ";
+        let subject = parse_schema(input);
+        assert_eq!(0, subject.len());
+    }
+}
