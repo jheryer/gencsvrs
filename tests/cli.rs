@@ -44,3 +44,11 @@ fn test_default_output_with_20_rows_and_pipe_delimiter() -> TestResult {
         "tests/expected/csv-default-r20-pipe-output.txt",
     )
 }
+
+// #[test]
+// fn test_default_output_parquet_writer() -> TestResult {
+//     run(
+//         &["-p", "", "-d", "|", "-w", "parquet"],
+//         "tests/expected/csv-default-r20-pipe-output.txt",
+//     )
+// }

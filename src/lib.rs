@@ -1,6 +1,9 @@
-mod csv;
+mod output_types;
+use output_types::csv;
+use output_types::lib::schema::parse_schema;
 use std::error::Error;
 use Box;
+
 type RunResult<T> = Result<T, Box<dyn Error>>;
 
 pub fn run(
@@ -10,7 +13,7 @@ pub fn run(
     remove_header: bool,
 ) -> RunResult<()> {
     if let Some(schema) = schema {
-        let tokenized_schema = csv::parse_schema(schema.as_str());
+        let tokenized_schema = parse_schema(schema.as_str());
 
         if tokenized_schema.len() == 0 {
             return Err("It has issues.".into());

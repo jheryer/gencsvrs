@@ -1,5 +1,5 @@
 use clap::Parser as CLAPParser;
-
+pub mod output_types;
 /// Easily generate fake CSV data with using the following types:
 /// STRING, INT, DIGIT, DECIMAL, DATE, TIME, DATE_TIME, NAME, ZIP_CODE, COUNTRY_CODE
 /// LAT, LON, PHONE, LOREM_WORD, LOREM_SENTENCE, LOREM_PARAGRAPH, UUID

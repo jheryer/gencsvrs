@@ -7,6 +7,7 @@ use fake::faker::phone_number::raw::*;
 use fake::locales::*;
 use fake::{Fake, Faker};
 use uuid::Uuid;
+
 //STRING
 pub fn fake_string() -> String {
     Faker.fake::<String>()
@@ -80,7 +81,10 @@ pub fn fake_lorem_word() -> String {
 //LOREM_TITLE
 pub fn fake_lorem_title() -> String {
     let title: Vec<String> = Words(EN, 1..4).fake();
-    let cap_title: Vec<String> = title.iter().map(|s| s[0..1].to_uppercase() + &s[1..]).collect();
+    let cap_title: Vec<String> = title
+        .iter()
+        .map(|s| s[0..1].to_uppercase() + &s[1..])
+        .collect();
     cap_title.join(" ")
 }
 
