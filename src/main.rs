@@ -12,17 +12,11 @@ pub struct Args {
     ///Generate number of rows
     #[arg(short, long, default_value_t = 10)]
     rows: usize,
-    ///csv delimiter character
-    #[arg(short, long, default_value_t = ',')]
-    delimiter: char,
-    ///include headers
-    #[arg(short, long, default_value_t = false)]
-    no_header: bool,
 }
 
 fn main() {
     let args = Args::parse();
-    if let Err(e) = gencsv::run(args.schema, args.rows, args.delimiter, args.no_header) {
+    if let Err(e) = gencsv::run(args.schema, args.rows) {
         eprintln!("{}", e);
         std::process::exit(1);
     }

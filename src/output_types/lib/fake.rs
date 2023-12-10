@@ -14,12 +14,8 @@ pub fn fake_string() -> String {
 }
 //INT
 //Digit
-pub fn fake_int() -> String {
-    let x = (0..4294967295).fake::<u32>().to_string();
-    return x;
-}
 
-pub fn fake_int_i32() -> i32 {
+pub fn fake_int() -> i32 {
     return (0..2147483647).fake::<i32>();
 }
 
@@ -27,9 +23,8 @@ pub fn fake_digit() -> String {
     Digit(EN).fake()
 }
 // DECIMAL
-pub fn fake_decimal() -> String {
-    let x = (0.0..100000.0).fake::<f32>().to_string();
-    return x;
+pub fn fake_decimal() -> f32 {
+    return (0.0..100000.0).fake::<f32>();
 }
 //DATE
 pub fn fake_date() -> String {

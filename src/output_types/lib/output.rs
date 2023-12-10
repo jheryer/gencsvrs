@@ -32,7 +32,7 @@ impl Output for Console {
             .map(|field| field.name().to_string())
             .collect::<Vec<_>>();
 
-        writer.write_record(&list);
+        writer.write_record(&list)?;
 
         for row_index in 0..num_rows {
             let mut row: Vec<String> = Vec::new();
@@ -45,7 +45,7 @@ impl Output for Console {
                     .value(row_index);
                 row.push(value.to_string());
             }
-            writer.write_record(&row);
+            writer.write_record(&row)?;
         }
         writer.flush()?;
 

@@ -6,12 +6,7 @@ use Box;
 
 type RunResult<T> = Result<T, Box<dyn Error>>;
 
-pub fn run(
-    schema: Option<String>,
-    rows: usize,
-    delimiter: char,
-    remove_header: bool,
-) -> RunResult<()> {
+pub fn run(schema: Option<String>, rows: usize) -> RunResult<()> {
     if let Some(schema) = schema {
         let tokenized_schema = parse_schema(schema.as_str());
 
@@ -19,9 +14,9 @@ pub fn run(
             return Err("It has issues.".into());
         }
 
-        csv::create_csv_with_schema(tokenized_schema, rows, delimiter, remove_header);
+        csv::create_csv_with_schema(tokenized_schema, rows);
     } else {
-        csv::create_default_csv(rows, delimiter, remove_header);
+        csv::create_default_csv(rows);
     }
 
     Ok(())

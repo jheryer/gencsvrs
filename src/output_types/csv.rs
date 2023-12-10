@@ -1,15 +1,9 @@
 use crate::output_types::lib::arrow_util::create_record_batch;
-use crate::output_types::lib::column_context::build_columns;
-use crate::output_types::lib::column_context::ColumnContext;
 use crate::output_types::lib::output;
 use crate::output_types::lib::output::Output;
 use crate::output_types::lib::schema::Schema;
-use csv::Writer;
-use std::error::Error;
-use std::io::stdout;
 
-pub fn create_csv_with_schema(schema: Vec<Schema>, rows: usize, delimiter: char) {
-    //    let mut writer = Writer::from_writer(stdout());
+pub fn create_csv_with_schema(schema: Vec<Schema>, rows: usize) {
     let record = create_record_batch(schema, rows);
     let mut writer = output::Console {};
 
@@ -18,7 +12,7 @@ pub fn create_csv_with_schema(schema: Vec<Schema>, rows: usize, delimiter: char)
     }
 }
 
-pub fn create_default_csv(rows: usize, delimiter: char) {
+pub fn create_default_csv(rows: usize) {
     let schema = vec![
         Schema {
             name: String::from("col1"),
@@ -38,7 +32,7 @@ pub fn create_default_csv(rows: usize, delimiter: char) {
         },
     ];
 
-    create_csv_with_schema(schema, rows, delimiter);
+    create_csv_with_schema(schema, rows);
 }
 
 /*
