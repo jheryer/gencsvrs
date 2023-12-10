@@ -55,6 +55,13 @@ pub fn build_arrow_columns(
                     fake::fake_int_i32,
                 ))) as ArrayRef,
             )),
+            "VALUE" => columns.push((
+                Arc::new(Field::new(element.name, DataType::Utf8, false)),
+                Arc::new(StringArray::from(build_data_vector(
+                    size,
+                    fake::value_string,
+                ))) as ArrayRef,
+            )),
             _ => columns.push((
                 Arc::new(Field::new(element.name, DataType::Utf8, false)),
                 Arc::new(StringArray::from(build_data_vector(
