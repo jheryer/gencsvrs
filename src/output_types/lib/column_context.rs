@@ -159,122 +159,6 @@ pub fn build_arrow_columns(
     return columns;
 }
 
-// pub fn build_columns(schema: Vec<Schema>) -> Vec<ColumnContext> {
-//     let mut columns: Vec<ColumnContext> = Vec::new();
-
-//     for element in schema {
-//         match element.datatype.as_str() {
-//             "STRING" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_string,
-//             )),
-//             "INT" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_int,
-//             )),
-//             "DIGIT" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_digit,
-//             )),
-//             "DECIMAL" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_decimal,
-//             )),
-//             "DATE" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_date,
-//             )),
-//             "TIME" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_time,
-//             )),
-//             "DATE_TIME" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_date_time,
-//             )),
-//             "NAME" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_name,
-//             )),
-//             "ZIP_CODE" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_zipcode,
-//             )),
-//             "COUNTRY_CODE" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_country_code,
-//             )),
-//             "STATE_NAME" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_state_name,
-//             )),
-//             "STATE_ABBR" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_state_abbr,
-//             )),
-//             "LAT" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_lat,
-//             )),
-//             "LON" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_lon,
-//             )),
-//             "PHONE" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_phone,
-//             )),
-//             "LOREM_WORD" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_lorem_word,
-//             )),
-//             "LOREM_TITLE" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_lorem_title,
-//             )),
-//             "LOREM_SENTENCE" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_lorem_sentence,
-//             )),
-//             "LOREM_PARAGRAPH" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_lorem_paragraph,
-//             )),
-//             "UUID" => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::fake_uuid,
-//             )),
-//             _ => columns.push(ColumnContext::new(
-//                 element.name,
-//                 DataType::Utf8,
-//                 fake::unknown_string,
-//             )),
-//         }
-//     }
-
-//     return columns;
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -291,11 +175,7 @@ mod tests {
                 datatype: String::from("INT"),
             },
         ];
-        let subject = super::build_arrow_columns(schema, 10);
+        let subject = build_arrow_columns(schema, 10);
         assert_eq!(2, subject.len());
-        // assert_eq!("col1", subject.get(0).unwrap().name);
-        // assert_eq!("STRING", subject.get(0).unwrap().datatype);
-        // assert_eq!("col2", subject.get(1).unwrap().name);
-        // assert_eq!("INT", subject.get(1).unwrap().datatype);
     }
 }

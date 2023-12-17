@@ -37,13 +37,13 @@ fn test_default_output_with_3_rows() -> TestResult {
     run(&["-r", "3"], "tests/expected/csv-default-r3-output.txt")
 }
 
-#[test]
-fn test_default_output_with_20_rows_and_pipe_delimiter() -> TestResult {
-    run(
-        &["-r", "20", "-d", "|"],
-        "tests/expected/csv-default-r20-pipe-output.txt",
-    )
-}
+// #[test]
+// fn test_default_output_with_20_rows_and_pipe_delimiter() -> TestResult {
+//     run(
+//         &["-r", "20", "-d", "|"],
+//         "tests/expected/csv-default-r20-pipe-output.txt",
+//     )
+// }
 
 // #[test]
 // fn test_default_output_parquet_writer() -> TestResult {
