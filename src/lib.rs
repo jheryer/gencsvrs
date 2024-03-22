@@ -1,10 +1,11 @@
-mod output_types;
-use output_types::csv;
-use output_types::lib::output::CSVFile;
-use output_types::lib::output::Console;
-use output_types::lib::schema::parse_schema;
+mod util;
 use std::error::Error;
+use util::schema::default_schema;
+use util::schema::parse_schema;
+use util::{dataframe::create_dataframe, output::Console};
 use Box;
+
+use crate::util::output::{CSVFile, Output, ParquetFile};
 type RunResult<T> = Result<T, Box<dyn Error>>;
 
 pub fn run(
@@ -14,29 +15,41 @@ pub fn run(
     csv: bool,
     parquet: bool,
 ) -> RunResult<()> {
+    let csv = if csv == false && parquet == false {
+        true
+    } else {
+        csv
+    };
+
     if let Some(schema) = schema {
         let tokenized_schema = parse_schema(schema.as_str());
 
         if tokenized_schema.len() == 0 {
             return Err("It has issues.".into());
         }
+
+        let mut data_frame = create_dataframe(tokenized_schema, rows);
+
         if csv {
             if file_target.is_some() {
-                csv::create_csv_with_schema(
-                    tokenized_schema,
-                    rows,
-                    &mut CSVFile {
-                        file_name: file_target.unwrap(),
-                    },
-                );
+                println!("CSV file output");
+                CSVFile {
+                    file_name: file_target.unwrap(),
+                }
+                .write(&mut data_frame)?;
             } else {
-                csv::create_csv_with_schema(tokenized_schema, rows, &mut Console {});
+                Console {}.write(&mut data_frame)?;
             }
         } else if parquet && file_target.is_some() {
-            println!("Parquet output");
+            ParquetFile {
+                file_name: file_target.unwrap(),
+            }
+            .write(&mut data_frame)?;
         }
     } else {
-        csv::create_default_csv(rows);
+        let tokenized_schema = default_schema();
+        let mut data_frame = create_dataframe(tokenized_schema, rows);
+        Console {}.write(&mut data_frame)?;
     }
 
     Ok(())

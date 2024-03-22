@@ -28,6 +28,27 @@ pub fn parse_schema(input: &str) -> Vec<Schema> {
     return schema;
 }
 
+pub fn default_schema() -> Vec<Schema> {
+    vec![
+        Schema {
+            name: String::from("col1"),
+            datatype: String::from("VALUE"),
+        },
+        Schema {
+            name: String::from("col2"),
+            datatype: String::from("VALUE"),
+        },
+        Schema {
+            name: String::from("col3"),
+            datatype: String::from("VALUE"),
+        },
+        Schema {
+            name: String::from("col4"),
+            datatype: String::from("VALUE"),
+        },
+    ]
+}
+
 #[cfg(test)]
 mod test {
 

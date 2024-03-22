@@ -42,12 +42,13 @@ cargo install --path .
  Usage: gencsv [OPTIONS]
 
 Options:
-  -s, --schema <SCHEMA>        Data Schema "col:STRING, col2:INT, col3:TIME"
-  -r, --rows <ROWS>            Generate number of rows [default: 10]
-  -d, --delimiter <DELIMITER>  csv delimiter character [default: ,]
-  -n, --no-header              include headers
-  -h, --help                   Print help
-  -V, --version                Print version
+  -s, --schema <SCHEMA>            Data Schema "col:STRING, col2:INT, col3:TIME"
+  -f, --file-target <FILE_TARGET>  
+  -r, --rows <ROWS>                Generate number of rows [default: 10]
+  -c, --csv                        CSV output
+  -p, --parquet                    Parquet output
+  -h, --help                       Print help
+  -V, --version                    Print version
 ```
 
 ### example
