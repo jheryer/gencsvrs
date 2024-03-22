@@ -50,37 +50,3 @@ impl Output for Console {
         Ok(())
     }
 }
-
-// fn csv_writer<W: io::Write>(
-//     mut writer: Writer<W>,
-//     record: &RecordBatch,
-// ) -> Result<(), Box<dyn Error>> {
-//     let cols = record.columns();
-//     let record_schema = record.schema();
-//     let num_rows = record.num_rows();
-//     let num_cols = record.num_columns();
-//     let list = record_schema
-//         .fields()
-//         .iter()
-//         .map(|field| field.name().to_string())
-//         .collect::<Vec<_>>();
-
-//     writer.write_record(&list)?;
-
-//     for row_index in 0..num_rows {
-//         let mut row: Vec<String> = Vec::new();
-//         for col_index in 0..num_cols {
-//             let col = cols.get(col_index).unwrap();
-//             let value = col
-//                 .as_any()
-//                 .downcast_ref::<arrow::array::StringArray>()
-//                 .unwrap()
-//                 .value(row_index);
-//             row.push(value.to_string());
-//         }
-//         writer.write_record(&row)?;
-//     }
-//     writer.flush()?;
-
-//     Ok(())
-// }
