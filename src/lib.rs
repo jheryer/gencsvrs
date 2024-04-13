@@ -2,7 +2,7 @@ mod util;
 use std::error::Error;
 use util::schema::default_schema;
 use util::schema::parse_schema;
-use util::{dataframe::create_dataframe, output::Console};
+use util::{dataframe::create_dataframe, dataframe::data_frame_from_parquet, output::Console};
 use Box;
 
 use crate::util::output::{CSVFile, Output, ParquetFile};

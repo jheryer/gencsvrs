@@ -6,6 +6,12 @@ use std::error::Error;
 
 type RangeParseResult = Result<(i32, i32), Box<dyn Error>>;
 
+pub fn data_frame_from_parquet(path: &str) -> Result<DataFrame, Box<dyn Error>> {
+    let mut file = std::fs::File::open(path)?;
+    let df = ParquetReader::new(&mut file).finish().unwrap();
+    Ok(df)
+}
+
 pub fn create_dataframe(schema: Vec<Schema>, size: usize) -> DataFrame {
     let mut cols = Vec::new();
 
@@ -166,6 +172,7 @@ fn parse_range_string(range_str: &str) -> RangeParseResult {
 
 mod test {
 
+    #![allow(unused_imports)]
     use super::*;
 
     #[test]

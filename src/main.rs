@@ -20,6 +20,9 @@ pub struct Args {
     ///Parquet output
     #[arg(short, long)]
     parquet: bool,
+    ///Parquet append target
+    #[arg(short, long)]
+    append_target: Option<String>,
 }
 
 fn main() {
