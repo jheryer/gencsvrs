@@ -1,6 +1,5 @@
 use crate::util::fake;
 use crate::util::schema::Schema;
-use polars::chunked_array::iterator::par;
 use polars::prelude::*;
 use regex::Regex;
 use std::error::Error;
@@ -115,6 +114,18 @@ pub fn create_dataframe(schema: Vec<Schema>, size: usize) -> DataFrame {
                 element.name.as_str(),
                 build_data_vector(size, fake::fake_uuid),
             ),
+            "FIRST_NAME" => Series::new(
+                element.name.as_str(),
+                build_data_vector(size, fake::fake_first_name),
+            ),
+            "LAST_NAME" => Series::new(
+                element.name.as_str(),
+                build_data_vector(size, fake::fake_last_name),
+            ),
+            "SSN" => Series::new(
+                element.name.as_str(),
+                build_data_vector(size, fake::fake_ssn),
+            ),
             _ => Series::new(
                 element.name.as_str(),
                 build_data_vector(size, fake::unknown_string),
@@ -154,8 +165,8 @@ fn parse_range_string(range_str: &str) -> RangeParseResult {
 }
 
 mod test {
+
     use super::*;
-    use crate::util::schema::Schema;
 
     #[test]
     fn test_create_dataframe() {

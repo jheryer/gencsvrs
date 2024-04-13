@@ -61,8 +61,6 @@ pub fn default_schema() -> Vec<Schema> {
 #[cfg(test)]
 mod test {
 
-    use std::ops::Sub;
-
     use super::*;
 
     #[test]
