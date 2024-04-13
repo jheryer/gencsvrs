@@ -142,7 +142,8 @@ fn build_incremental_int(size: i32, start: i32, end: i32) -> Vec<i32> {
 }
 
 fn parse_range_string(range_str: &str) -> RangeParseResult {
-    let re = Regex::new(r"\((\d+)-(\d+)\)").unwrap();
+    // let re = Regex::new(r"\((\d+)-(\d+)\)").unwrap();
+    let re = Regex::new(r"\((-?\d+)\s*-\s*(-?\d+)\)").unwrap();
     if let Some(caps) = re.captures(range_str) {
         let lower: i32 = caps.get(1).unwrap().as_str().parse()?;
         let upper: i32 = caps.get(2).unwrap().as_str().parse()?;
@@ -207,5 +208,11 @@ mod test {
     fn test_parse_range_string() {
         let data = parse_range_string("(0-10)");
         assert_eq!(data.unwrap(), (0, 10));
+    }
+
+    #[test]
+    fn test_parse_negative_range_string() {
+        let data = parse_range_string("(-10-10)");
+        assert_eq!(data.unwrap(), (-10, 10));
     }
 }
