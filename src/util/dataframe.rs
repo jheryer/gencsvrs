@@ -1,11 +1,13 @@
 use crate::util::fake;
 use crate::util::schema::Schema;
 use polars::prelude::*;
+use rand::Rng;
 use regex::Regex;
-use std::error::Error;
+use std::error::Error; // rand crate is required for random number generation
 
 type RangeParseResult = Result<(i32, i32), Box<dyn Error>>;
 type DataFrameResult = Result<DataFrame, Box<dyn Error>>;
+type DeleteTargetResult = Result<Vec<i32>, Box<dyn Error>>;
 
 fn data_frame_from_file(path: &str) -> DataFrameResult {
     let mut file = std::fs::File::open(path)?;
@@ -154,6 +156,7 @@ pub fn create_dataframe(
         Some(file) => {
             let mut target_data_frame = data_frame_from_file(file.as_str())?;
             let df = DataFrame::new(cols).unwrap();
+
             match target_data_frame.extend(&df) {
                 Ok(_) => (),
                 Err(e) => {
@@ -166,14 +169,6 @@ pub fn create_dataframe(
         None => DataFrame::new(cols).unwrap(),
     };
 
-    // let df =
-    // match data_frame.extend(&df) {
-    //     Ok(_) => (),
-    //     Err(e) => {
-    //         eprintln!("Error extending DataFrame: {}", e);
-    //         return Err("error".into());
-    //     }
-    // }
     Ok(data_frame)
 }
 
@@ -187,12 +182,10 @@ fn build_data_vector<T>(size: usize, generator: impl Fn() -> T) -> Vec<T> {
 
 fn build_incremental_int(size: i32, start: i32, end: i32) -> Vec<i32> {
     let end = if start - end < 0 { start + size } else { end };
-    println!("start: {}, end: {}", start, end);
     (start..end as i32).collect::<Vec<i32>>()
 }
 
 fn parse_range_string(range_str: &str) -> RangeParseResult {
-    // let re = Regex::new(r"\((\d+)-(\d+)\)").unwrap();
     let re = Regex::new(r"\((-?\d+)\s*-\s*(-?\d+)\)").unwrap();
     if let Some(caps) = re.captures(range_str) {
         let lower: i32 = caps.get(1).unwrap().as_str().parse()?;
@@ -203,9 +196,45 @@ fn parse_range_string(range_str: &str) -> RangeParseResult {
     }
 }
 
+fn parse_delete_target(text: &str, rows: usize) -> DeleteTargetResult {
+    let mut results = Vec::new();
+
+    if text == "random" {
+        let mut rng = rand::thread_rng();
+        let random_count = rng.gen_range(0..=rows);
+        let random_numbers: Vec<i32> = (0..random_count)
+            .map(|_| rng.gen_range(0..=rows) as i32)
+            .collect();
+        return Ok(random_numbers);
+    }
+
+    if let Ok(num) = text.parse::<i32>() {
+        return Ok(vec![num]);
+    }
+
+    let re = Regex::new(r"^(\-?\d+)-(\-?\d+)$").unwrap();
+    if let Some(caps) = re.captures(text) {
+        let lower: i32 = caps.get(1).unwrap().as_str().parse()?;
+        let upper: i32 = caps.get(2).unwrap().as_str().parse()?;
+        return Ok((lower..=upper).collect()); // Create a range
+    }
+
+    for num_str in text.split(',') {
+        let num = num_str.trim().parse::<i32>()?;
+        results.push(num);
+    }
+
+    if results.len() > 0 {
+        return Ok(results);
+    }
+
+    Err(format!("Error parsing delete target: {}", text).into())
+}
 mod test {
 
     #![allow(unused_imports)]
+    use polars::chunked_array::iterator::par;
+
     use super::*;
 
     #[test]
@@ -265,5 +294,29 @@ mod test {
     fn test_parse_negative_range_string() {
         let data = parse_range_string("(-10-10)");
         assert_eq!(data.unwrap(), (-10, 10));
+    }
+
+    #[test]
+    fn test_delete_target() {
+        let data = parse_delete_target("1,2,3", 10);
+        assert_eq!(data.unwrap(), vec![1, 2, 3]);
+
+        let data = parse_delete_target("1-3", 10);
+        assert_eq!(data.unwrap(), vec![1, 2, 3]);
+
+        let data = parse_delete_target("5", 10);
+        assert_eq!(data.unwrap(), vec![5]);
+
+        let data = parse_delete_target("random", 10);
+        assert!(data.unwrap().len() > 1);
+
+        let bad_result = parse_delete_target("xyz", 10);
+        assert!(bad_result.is_err());
+
+        let bad_result = parse_delete_target("100-2,3", 10);
+        assert!(bad_result.is_err());
+
+        let bad_result = parse_delete_target("", 10);
+        assert!(bad_result.is_err());
     }
 }
