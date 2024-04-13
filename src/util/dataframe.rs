@@ -15,6 +15,7 @@ pub fn create_dataframe(schema: Vec<Schema>, size: usize) -> DataFrame {
                 element.name.as_str(),
                 build_data_vector(size, fake::fake_int),
             ),
+            "INT_INC" => Series::new(element.name.as_str(), build_incremental_int(size)),
             "VALUE" => Series::new(
                 element.name.as_str(),
                 build_data_vector(size, fake::value_string),
@@ -109,4 +110,8 @@ fn build_data_vector<T>(size: usize, generator: impl Fn() -> T) -> Vec<T> {
         data.push(generator());
     }
     data
+}
+
+fn build_incremental_int(size: usize) -> Vec<i32> {
+    (0..size as i32).collect::<Vec<i32>>()
 }

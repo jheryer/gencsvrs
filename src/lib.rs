@@ -32,7 +32,6 @@ pub fn run(
 
         if csv {
             if file_target.is_some() {
-                println!("CSV file output");
                 CSVFile {
                     file_name: file_target.unwrap(),
                 }
