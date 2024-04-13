@@ -5,14 +5,19 @@ use regex::Regex;
 use std::error::Error;
 
 type RangeParseResult = Result<(i32, i32), Box<dyn Error>>;
+type DataFrameResult = Result<DataFrame, Box<dyn Error>>;
 
-pub fn data_frame_from_parquet(path: &str) -> Result<DataFrame, Box<dyn Error>> {
+fn data_frame_from_file(path: &str) -> DataFrameResult {
     let mut file = std::fs::File::open(path)?;
     let df = ParquetReader::new(&mut file).finish().unwrap();
     Ok(df)
 }
 
-pub fn create_dataframe(schema: Vec<Schema>, size: usize) -> DataFrame {
+pub fn create_dataframe(
+    schema: Vec<Schema>,
+    size: usize,
+    append_target: Option<String>,
+) -> DataFrameResult {
     let mut cols = Vec::new();
 
     for element in schema {
@@ -100,6 +105,10 @@ pub fn create_dataframe(schema: Vec<Schema>, size: usize) -> DataFrame {
                 element.name.as_str(),
                 build_data_vector(size, fake::fake_phone),
             ),
+            "PRICE" => Series::new(
+                element.name.as_str(),
+                build_data_vector(size, fake::fake_price),
+            ),
             "LOREM_WORD" => Series::new(
                 element.name.as_str(),
                 build_data_vector(size, fake::fake_lorem_word),
@@ -141,7 +150,31 @@ pub fn create_dataframe(schema: Vec<Schema>, size: usize) -> DataFrame {
         cols.push(col);
     }
 
-    DataFrame::new(cols).unwrap()
+    let data_frame = match append_target {
+        Some(file) => {
+            let mut target_data_frame = data_frame_from_file(file.as_str())?;
+            let df = DataFrame::new(cols).unwrap();
+            match target_data_frame.extend(&df) {
+                Ok(_) => (),
+                Err(e) => {
+                    eprintln!("Error extending DataFrame: {}", e);
+                    return Err("error".into());
+                }
+            }
+            target_data_frame
+        }
+        None => DataFrame::new(cols).unwrap(),
+    };
+
+    // let df =
+    // match data_frame.extend(&df) {
+    //     Ok(_) => (),
+    //     Err(e) => {
+    //         eprintln!("Error extending DataFrame: {}", e);
+    //         return Err("error".into());
+    //     }
+    // }
+    Ok(data_frame)
 }
 
 fn build_data_vector<T>(size: usize, generator: impl Fn() -> T) -> Vec<T> {
@@ -190,7 +223,7 @@ mod test {
             },
         ];
 
-        let df = create_dataframe(schema, 10);
+        let df = create_dataframe(schema, 10, None).unwrap();
         assert_eq!(df.shape(), (10, 2));
     }
 

@@ -9,6 +9,7 @@ use fake::faker::phone_number::raw::*;
 use fake::locales::*;
 use fake::{Fake, Faker};
 
+use fakeit::currency;
 use fakeit::name;
 use fakeit::person;
 
@@ -122,6 +123,11 @@ pub fn fake_last_name() -> String {
 //SSN
 pub fn fake_ssn() -> String {
     person::ssn()
+}
+
+//PRICE
+pub fn fake_price() -> String {
+    currency::price(0.0, 9999.0).to_string()
 }
 
 //default

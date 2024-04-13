@@ -76,6 +76,7 @@ id,name,phone,zip,date,guid,range
 * INT_RNG
 * DIGIT
 * DECIMAL
+* PRICE (0.00 - 9999.00)
 * DATE
 * TIME
 * DATE_TIME
