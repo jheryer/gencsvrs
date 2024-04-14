@@ -14,6 +14,8 @@ pub fn run(
     file_target: Option<String>,
     csv: bool,
     parquet: bool,
+    append_target: Option<String>,
+    delete_target: Option<String>,
 ) -> RunResult<()> {
     let csv = if csv == false && parquet == false {
         true
@@ -28,11 +30,17 @@ pub fn run(
             return Err("It has issues.".into());
         }
 
-        let mut data_frame = create_dataframe(tokenized_schema, rows);
+        let mut data_frame =
+            match create_dataframe(tokenized_schema, rows, append_target, delete_target) {
+                Ok(df) => df,
+                Err(e) => {
+                    eprintln!("Error creating DataFrame: {}", e);
+                    return Err(e);
+                }
+            };
 
         if csv {
             if file_target.is_some() {
-                println!("CSV file output");
                 CSVFile {
                     file_name: file_target.unwrap(),
                 }
@@ -48,7 +56,16 @@ pub fn run(
         }
     } else {
         let tokenized_schema = default_schema();
-        let mut data_frame = create_dataframe(tokenized_schema, rows);
+
+        let mut data_frame =
+            match create_dataframe(tokenized_schema, rows, append_target, delete_target) {
+                Ok(df) => df,
+                Err(e) => {
+                    eprintln!("Error creating DataFrame: {}", e);
+                    return Err(e);
+                }
+            };
+
         Console {}.write(&mut data_frame)?;
     }
 

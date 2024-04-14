@@ -1,3 +1,5 @@
+extern crate fakeit;
+
 use fake::faker::address::raw::*;
 use fake::faker::chrono::raw::*;
 use fake::faker::lorem::raw::*;
@@ -6,6 +8,11 @@ use fake::faker::number::raw::*;
 use fake::faker::phone_number::raw::*;
 use fake::locales::*;
 use fake::{Fake, Faker};
+
+use fakeit::currency;
+use fakeit::name;
+use fakeit::person;
+
 use uuid::Uuid;
 
 //STRING
@@ -102,6 +109,25 @@ pub fn fake_lorem_paragraph() -> String {
 pub fn fake_uuid() -> String {
     let uuid = Uuid::new_v4();
     uuid.to_string()
+}
+
+//FIRST_NAME
+pub fn fake_first_name() -> String {
+    name::first()
+}
+//LAST_NAME
+pub fn fake_last_name() -> String {
+    name::last()
+}
+
+//SSN
+pub fn fake_ssn() -> String {
+    person::ssn()
+}
+
+//PRICE
+pub fn fake_price() -> String {
+    currency::price(0.0, 9999.0).to_string()
 }
 
 //default
