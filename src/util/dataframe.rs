@@ -3,7 +3,7 @@ use crate::util::schema::Schema;
 use polars::prelude::*;
 use rand::Rng;
 use regex::Regex;
-use std::error::Error; // rand crate is required for random number generation
+use std::error::Error;
 
 type RangeParseResult = Result<(i32, i32), Box<dyn Error>>;
 type DataFrameResult = Result<DataFrame, Box<dyn Error>>;
@@ -173,7 +173,6 @@ pub fn create_dataframe(
     let data_frame = match delete_target {
         Some(target) => {
             let delete_indexes = parse_delete_target(target.as_str(), size)?;
-            println!("Deleting: {:?}", delete_indexes);
             let mut new_df = data_frame.clone();
             new_df = filter_by_index(new_df, delete_indexes);
             new_df
@@ -213,7 +212,7 @@ fn parse_delete_target(text: &str, rows: usize) -> DeleteTargetResult {
 
     if text == "random" || text == "rand" {
         let mut rng = rand::thread_rng();
-        let random_count = rng.gen_range(0..=rows);
+        let random_count = rng.gen_range(1..=rows);
         let mut random_numbers: Vec<i32> = (0..random_count)
             .map(|_| rng.gen_range(0..=rows) as i32)
             .collect();
@@ -298,8 +297,6 @@ mod test {
 
         let df = create_dataframe(schema.clone(), 10, None, None).unwrap();
         assert_eq!(df.shape(), (10, 3));
-        // let new_df = filter_by_index(df, 2);
-        // assert_eq!(new_df.shape(), (9, 3));
     }
 
     #[test]
@@ -354,7 +351,10 @@ mod test {
         assert_eq!(data.unwrap(), vec![5]);
 
         let data = parse_delete_target("random", 10);
-        assert!(data.unwrap().len() > 1);
+        assert!(data.unwrap().len() >= 1);
+
+        let data = parse_delete_target("rand", 10);
+        assert!(data.unwrap().len() >= 1);
 
         let bad_result = parse_delete_target("xyz", 10);
         assert!(bad_result.is_err());

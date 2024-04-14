@@ -8,9 +8,9 @@
     - [Cargo](#cargo)
   - [Usage](#usage)
   - [Example](#example)
-    - [Write csv to stdout](#write-csv-to-stdout)
-    - [Write to parquet](#write-to-parquet)
-    - [Write to parquet , append to an existing file](#write-to-parquet--append-to-an-existing-file)
+    - [Generate 10 rows in csv format write to std out](#generate-10-rows-in-csv-format-write-to-std-out)
+    - [Generate 10 rows in parquet format write test.parquet file](#generate-10-rows-in-parquet-format-write-testparquet-file)
+    - [Generate two new rows, write to out.parquet, append data from test.parquet, hard delete rows 0,1,2](#generate-two-new-rows-write-to-outparquet-append-data-from-testparquet-hard-delete-rows-012)
   - [Available Data Types](#available-data-types)
 
 
@@ -57,7 +57,7 @@ Options:
 
 ## Example
 
-### Write csv to stdout
+### Generate 10 rows in csv format write to std out
 ```
 $ gencsv -s "id:INT_INC,name:NAME,phone:PHONE,zip:ZIP_CODE,date:DATE,guid:UUID,range:INT_RNG:(-15-23)" -r 10 -c
 
@@ -74,15 +74,14 @@ id,name,phone,zip,date,guid,range
 9,Mateo Nikolaus,(594) 138-8262,43276,1576-11-07,d98c9514-7d07-42d3-8092-b2af2663d35d,-6
 ```
 
-### Write to parquet
+### Generate 10 rows in parquet format write test.parquet file
 ```
 $ gencsv -s 'id:INT_INC,name:NAME,phone:PHONE,zip:ZIP_CODE,date:DATE,price:PRICE,gid:UUID' -r 10 -p -f test.parquet
 ```
 
-### Write to parquet , append to an existing file
-
+### Generate two new rows, write to out.parquet, append data from test.parquet, hard delete rows 0,1,2
 ```
-$ gencsv -s 'id:INT_INC,name:NAME,phone:PHONE,zip:ZIP_CODE,date:DATE,price:PRICE,gid:UUID' -r 10 -p -f out.parquet -f test.parquet 
+$ gencsv -s 'id:INT_RNG:(10-19),name:NAME,phone:PHONE,zip:ZIP_CODE,date:DATE,price:PRICE,gid:UUID' -r 2 -p -f out.parquet -a test.parquet -d 0-2
 ```
 
 ## Available Data Types

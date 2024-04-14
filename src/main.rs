@@ -1,7 +1,7 @@
 use clap::Parser as CLAPParser;
 /// Easily generate fake data with using the following types:
 /// STRING, INT, INT_INC, INT_RNG, DIGIT, DECIMAL, DATE, TIME, DATE_TIME, NAME, ZIP_CODE, COUNTRY_CODE
-/// LAT, LON, PHONE, LOREM_WORD, LOREM_SENTENCE, LOREM_PARAGRAPH, UUID , PRINCE
+/// LAT, LON, PHONE, LOREM_WORD, LOREM_SENTENCE, LOREM_PARAGRAPH, UUID , PRICE
 #[derive(CLAPParser)]
 #[command(author,version,about,long_about=None)]
 pub struct Args {
@@ -23,7 +23,7 @@ pub struct Args {
     ///Parquet append target
     #[arg(short, long)]
     append_target: Option<String>,
-    ///Delete index to simulate 1 or 1,2,3 or 1-3
+    ///Delete rows by index 1 or 1,2,3 or 1-3
     #[arg(short, long)]
     delete_target: Option<String>,
 }
@@ -37,7 +37,7 @@ fn main() {
         args.csv,
         args.parquet,
         args.append_target,
-        args.delete_target
+        args.delete_target,
     ) {
         eprintln!("{}", e);
         std::process::exit(1);
