@@ -211,12 +211,13 @@ fn parse_range_string(range_str: &str) -> RangeParseResult {
 fn parse_delete_target(text: &str, rows: usize) -> DeleteTargetResult {
     let mut results = Vec::new();
 
-    if text == "random" {
+    if text == "random" || text == "rand" {
         let mut rng = rand::thread_rng();
         let random_count = rng.gen_range(0..=rows);
-        let random_numbers: Vec<i32> = (0..random_count)
+        let mut random_numbers: Vec<i32> = (0..random_count)
             .map(|_| rng.gen_range(0..=rows) as i32)
             .collect();
+        random_numbers.dedup();
         return Ok(random_numbers);
     }
 
