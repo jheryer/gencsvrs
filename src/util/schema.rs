@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct Schema {
     pub name: String,
     pub datatype: String,

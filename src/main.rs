@@ -23,6 +23,9 @@ pub struct Args {
     ///Parquet append target
     #[arg(short, long)]
     append_target: Option<String>,
+    ///Delete index to simulate 1 or 1,2,3 or 1-3
+    #[arg(short, long)]
+    delete_target: Option<String>,
 }
 
 fn main() {
@@ -34,6 +37,7 @@ fn main() {
         args.csv,
         args.parquet,
         args.append_target,
+        args.delete_target
     ) {
         eprintln!("{}", e);
         std::process::exit(1);

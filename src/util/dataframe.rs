@@ -19,6 +19,7 @@ pub fn create_dataframe(
     schema: Vec<Schema>,
     size: usize,
     append_target: Option<String>,
+    delete_target: Option<String>,
 ) -> DataFrameResult {
     let mut cols = Vec::new();
 
@@ -169,6 +170,19 @@ pub fn create_dataframe(
         None => DataFrame::new(cols).unwrap(),
     };
 
+    let data_frame = match delete_target {
+        Some(target) => {
+            let delete_target = parse_delete_target(target.as_str(), size)?;
+            println!("Deleting: {:?}", delete_target);
+            let mut new_df = data_frame.clone();
+            for index in delete_target {
+                new_df = filter_by_index(new_df, index);
+            }
+            new_df
+        }
+        None => data_frame,
+    };
+
     Ok(data_frame)
 }
 
@@ -230,6 +244,23 @@ fn parse_delete_target(text: &str, rows: usize) -> DeleteTargetResult {
 
     Err(format!("Error parsing delete target: {}", text).into())
 }
+
+fn filter_by_index(df: DataFrame, index: i32) -> DataFrame {
+    let temp_col = build_incremental_int(df.height() as i32, 0, (df.height()) as i32);
+    let col_name = fake::fake_uuid();
+    let temp_series = Series::new(col_name.as_str(), temp_col);
+
+    let new_df = df
+        .lazy()
+        .with_columns([temp_series.lit()])
+        .filter(col(col_name.as_str()).neq(lit(index)))
+        .drop([col_name.as_str()])
+        .collect()
+        .unwrap();
+
+    return new_df;
+}
+
 mod test {
 
     #![allow(unused_imports)]
@@ -250,10 +281,20 @@ mod test {
                 datatype: String::from("STRING"),
                 modifier: None,
             },
+            Schema {
+                name: String::from("col3"),
+                datatype: String::from("LOREM_WORD"),
+                modifier: None,
+            },
         ];
 
-        let df = create_dataframe(schema, 10, None).unwrap();
-        assert_eq!(df.shape(), (10, 2));
+        let df = create_dataframe(schema.clone(), 10, None, Some("1,2".to_string())).unwrap();
+        assert_eq!(df.shape(), (8, 3));
+
+        let df = create_dataframe(schema.clone(), 10, None, None).unwrap();
+        assert_eq!(df.shape(), (10, 3));
+        // let new_df = filter_by_index(df, 2);
+        // assert_eq!(new_df.shape(), (9, 3));
     }
 
     #[test]
