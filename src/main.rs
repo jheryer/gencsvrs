@@ -8,7 +8,7 @@ pub struct Args {
     ///Data Schema "col:STRING, col2:INT, col3:TIME"
     #[arg(short, long)]
     schema: Option<String>,
-    // Output file name
+    /// Output file name (rquired for parquet file output)
     #[arg(short, long)]
     file_target: Option<String>,
     ///Generate number of rows

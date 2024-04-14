@@ -7,7 +7,10 @@
   - [Installation](#installation)
     - [Cargo](#cargo)
   - [Usage](#usage)
-    - [example](#example)
+  - [Example](#example)
+    - [Write csv to stdout](#write-csv-to-stdout)
+    - [Write to parquet](#write-to-parquet)
+    - [Write to parquet , append to an existing file](#write-to-parquet--append-to-an-existing-file)
   - [Available Data Types](#available-data-types)
 
 
@@ -42,16 +45,19 @@ cargo install --path .
  Usage: gencsv [OPTIONS]
 
 Options:
-  -s, --schema <SCHEMA>            Data Schema "col:STRING, col2:INT, col3:TIME"
-  -f, --file-target <FILE_TARGET>  
-  -r, --rows <ROWS>                Generate number of rows [default: 10]
-  -c, --csv                        CSV output
-  -p, --parquet                    Parquet output
-  -h, --help                       Print help
-  -V, --version                    Print version
+  -s, --schema <SCHEMA>                Data Schema "col:STRING, col2:INT, col3:TIME"
+  -f, --file-target <FILE_TARGET>      Output file name (rquired for parquet file output)
+  -r, --rows <ROWS>                    Generate number of rows [default: 10]
+  -c, --csv                            CSV output
+  -p, --parquet                        Parquet output
+  -a, --append-target <APPEND_TARGET>  Parquet append target
+  -h, --help                           Print help
+  -V, --version                        Print version
 ```
 
-### example
+## Example
+
+### Write csv to stdout
 ```
 $ gencsv -s "id:INT_INC,name:NAME,phone:PHONE,zip:ZIP_CODE,date:DATE,guid:UUID,range:INT_RNG:(-15-23)" -r 10 -c
 
@@ -68,6 +74,17 @@ id,name,phone,zip,date,guid,range
 9,Mateo Nikolaus,(594) 138-8262,43276,1576-11-07,d98c9514-7d07-42d3-8092-b2af2663d35d,-6
 ```
 
+### Write to parquet
+```
+$ gencsv -s 'id:INT_INC,name:NAME,phone:PHONE,zip:ZIP_CODE,date:DATE,price:PRICE,gid:UUID' -r 10 -p -f test.parquet
+```
+
+### Write to parquet , append to an existing file
+
+```
+$ gencsv -s 'id:INT_INC,name:NAME,phone:PHONE,zip:ZIP_CODE,date:DATE,price:PRICE,gid:UUID' -r 10 -p -f out.parquet -f test.parquet 
+```
+
 ## Available Data Types
 
 * STRING
@@ -81,6 +98,9 @@ id,name,phone,zip,date,guid,range
 * TIME
 * DATE_TIME
 * NAME
+* FIRST_NAME
+* LAST_NAME
+* SSN
 * ZIP_CODE
 * COUNTRY_CODE
 * STATE_NAME
