@@ -1,5 +1,5 @@
 extern crate fakeit;
-
+use crate::util::schema::Schema;
 use fake::faker::address::raw::*;
 use fake::faker::chrono::raw::*;
 use fake::faker::lorem::raw::*;
@@ -8,12 +8,123 @@ use fake::faker::number::raw::*;
 use fake::faker::phone_number::raw::*;
 use fake::locales::*;
 use fake::{Fake, Faker};
-
 use fakeit::currency;
 use fakeit::name;
 use fakeit::person;
-
+use polars::prelude::*;
+use regex::Regex;
+use std::error::Error;
 use uuid::Uuid;
+
+type RangeParseResult = Result<(i32, i32), Box<dyn Error>>;
+
+fn build_data_vector<T>(size: usize, generator: impl Fn() -> T) -> Vec<T> {
+    let mut data: Vec<T> = Vec::with_capacity(size);
+    for _ in 0..size {
+        data.push(generator());
+    }
+    data
+}
+
+pub fn build_incremental_int(size: i32, start: i32, end: i32) -> Vec<i32> {
+    let end = if start - end < 0 { start + size } else { end };
+    (start..end as i32).collect::<Vec<i32>>()
+}
+
+fn parse_range_string(range_str: &str) -> RangeParseResult {
+    let re = Regex::new(r"\((-?\d+)\s*-\s*(-?\d+)\)").unwrap();
+    if let Some(caps) = re.captures(range_str) {
+        let lower: i32 = caps.get(1).unwrap().as_str().parse()?;
+        let upper: i32 = caps.get(2).unwrap().as_str().parse()?;
+        Ok((lower, upper))
+    } else {
+        Err(format!("Error parsing {}", range_str).into())
+    }
+}
+
+pub fn create_column(element: Schema, size: usize) -> Series {
+    let col = match element.datatype.as_str() {
+        "STRING" => Series::new(element.name.as_str(), build_data_vector(size, fake_string)),
+        "INT" => Series::new(element.name.as_str(), build_data_vector(size, fake_int)),
+        "INT_INC" => Series::new(
+            element.name.as_str(),
+            build_incremental_int(size as i32, 0, size.clone() as i32),
+        ),
+        "INT_RNG" => {
+            let (lower, upper) =
+                match parse_range_string(element.modifier.as_ref().unwrap().as_str()) {
+                    Ok((lower, upper)) => (lower, upper),
+                    Err(e) => {
+                        eprintln!("Error parsing range: {} , using default range", e);
+                        (0, size as i32)
+                    }
+                };
+
+            Series::new(
+                element.name.as_str(),
+                build_incremental_int(size as i32, lower, upper),
+            )
+        }
+        "VALUE" => Series::new(element.name.as_str(), build_data_vector(size, value_string)),
+        "DIGIT" => Series::new(element.name.as_str(), build_data_vector(size, fake_digit)),
+        "DECIMAL" => Series::new(element.name.as_str(), build_data_vector(size, fake_decimal)),
+        "DATE" => Series::new(element.name.as_str(), build_data_vector(size, fake_date)),
+        "TIME" => Series::new(element.name.as_str(), build_data_vector(size, fake_time)),
+        "DATE_TIME" => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, fake_date_time),
+        ),
+        "NAME" => Series::new(element.name.as_str(), build_data_vector(size, fake_name)),
+        "ZIP_CODE" => Series::new(element.name.as_str(), build_data_vector(size, fake_zipcode)),
+        "COUNTRY_CODE" => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, fake_country_code),
+        ),
+        "STATE_NAME" => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, fake_state_name),
+        ),
+        "STATE_ABBR" => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, fake_state_abbr),
+        ),
+        "LAT" => Series::new(element.name.as_str(), build_data_vector(size, fake_lat)),
+        "LON" => Series::new(element.name.as_str(), build_data_vector(size, fake_lon)),
+        "PHONE" => Series::new(element.name.as_str(), build_data_vector(size, fake_phone)),
+        "PRICE" => Series::new(element.name.as_str(), build_data_vector(size, fake_price)),
+        "LOREM_WORD" => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, fake_lorem_word),
+        ),
+        "LOREM_TITLE" => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, fake_lorem_title),
+        ),
+        "LOREM_SENTENCE" => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, fake_lorem_sentence),
+        ),
+        "LOREM_PARAGRAPH" => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, fake_lorem_paragraph),
+        ),
+        "UUID" => Series::new(element.name.as_str(), build_data_vector(size, fake_uuid)),
+        "FIRST_NAME" => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, fake_first_name),
+        ),
+        "LAST_NAME" => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, fake_last_name),
+        ),
+        "SSN" => Series::new(element.name.as_str(), build_data_vector(size, fake_ssn)),
+        _ => Series::new(
+            element.name.as_str(),
+            build_data_vector(size, unknown_string),
+        ),
+    };
+    col
+}
 
 //STRING
 pub fn fake_string() -> String {
@@ -136,4 +247,41 @@ pub fn value_string() -> String {
 }
 pub fn unknown_string() -> String {
     String::from("unknown")
+}
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_build_incremental_int() {
+        let data = build_incremental_int(10, 0, 10);
+        assert_eq!(data, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    }
+    #[test]
+    fn test_build_incremental_int_with_negative() {
+        let data = build_incremental_int(10, -10, 10);
+        assert_eq!(data, vec![-10, -9, -8, -7, -6, -5, -4, -3, -2, -1]);
+    }
+
+    #[test]
+    fn test_build_incremental_underun_size() {
+        let data = build_incremental_int(10, 0, 5);
+        assert_eq!(data, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    }
+    #[test]
+    fn test_build_incremental_overrun_size() {
+        let data = build_incremental_int(10, 0, 200);
+        assert_eq!(data, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    }
+
+    #[test]
+    fn test_parse_range_string() {
+        let data = parse_range_string("(0-10)");
+        assert_eq!(data.unwrap(), (0, 10));
+    }
+
+    #[test]
+    fn test_parse_negative_range_string() {
+        let data = parse_range_string("(-10-10)");
+        assert_eq!(data.unwrap(), (-10, 10));
+    }
 }

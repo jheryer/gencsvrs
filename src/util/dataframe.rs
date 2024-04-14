@@ -1,11 +1,12 @@
-use crate::util::fake;
+use crate::util::fake::build_incremental_int;
+use crate::util::fake::create_column;
+use crate::util::fake::fake_uuid;
 use crate::util::schema::Schema;
 use polars::prelude::*;
 use rand::Rng;
 use regex::Regex;
 use std::error::Error;
 
-type RangeParseResult = Result<(i32, i32), Box<dyn Error>>;
 type DataFrameResult = Result<DataFrame, Box<dyn Error>>;
 type DeleteTargetResult = Result<Vec<i32>, Box<dyn Error>>;
 
@@ -24,132 +25,7 @@ pub fn create_dataframe(
     let mut cols = Vec::new();
 
     for element in schema {
-        let col = match element.datatype.as_str() {
-            "STRING" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_string),
-            ),
-            "INT" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_int),
-            ),
-            "INT_INC" => Series::new(
-                element.name.as_str(),
-                build_incremental_int(size as i32, 0, size.clone() as i32),
-            ),
-            "INT_RNG" => {
-                let (lower, upper) =
-                    match parse_range_string(element.modifier.as_ref().unwrap().as_str()) {
-                        Ok((lower, upper)) => (lower, upper),
-                        Err(e) => {
-                            eprintln!("Error parsing range: {} , using default range", e);
-                            (0, size as i32)
-                        }
-                    };
-
-                Series::new(
-                    element.name.as_str(),
-                    build_incremental_int(size as i32, lower, upper),
-                )
-            }
-            "VALUE" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::value_string),
-            ),
-            "DIGIT" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_digit),
-            ),
-            "DECIMAL" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_decimal),
-            ),
-            "DATE" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_date),
-            ),
-            "TIME" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_time),
-            ),
-            "DATE_TIME" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_date_time),
-            ),
-            "NAME" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_name),
-            ),
-            "ZIP_CODE" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_zipcode),
-            ),
-            "COUNTRY_CODE" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_country_code),
-            ),
-            "STATE_NAME" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_state_name),
-            ),
-            "STATE_ABBR" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_state_abbr),
-            ),
-            "LAT" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_lat),
-            ),
-            "LON" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_lon),
-            ),
-            "PHONE" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_phone),
-            ),
-            "PRICE" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_price),
-            ),
-            "LOREM_WORD" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_lorem_word),
-            ),
-            "LOREM_TITLE" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_lorem_title),
-            ),
-            "LOREM_SENTENCE" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_lorem_sentence),
-            ),
-            "LOREM_PARAGRAPH" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_lorem_paragraph),
-            ),
-            "UUID" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_uuid),
-            ),
-            "FIRST_NAME" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_first_name),
-            ),
-            "LAST_NAME" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_last_name),
-            ),
-            "SSN" => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::fake_ssn),
-            ),
-            _ => Series::new(
-                element.name.as_str(),
-                build_data_vector(size, fake::unknown_string),
-            ),
-        };
-
+        let col = create_column(element, size);
         cols.push(col);
     }
 
@@ -181,30 +57,6 @@ pub fn create_dataframe(
     };
 
     Ok(data_frame)
-}
-
-fn build_data_vector<T>(size: usize, generator: impl Fn() -> T) -> Vec<T> {
-    let mut data: Vec<T> = Vec::with_capacity(size);
-    for _ in 0..size {
-        data.push(generator());
-    }
-    data
-}
-
-fn build_incremental_int(size: i32, start: i32, end: i32) -> Vec<i32> {
-    let end = if start - end < 0 { start + size } else { end };
-    (start..end as i32).collect::<Vec<i32>>()
-}
-
-fn parse_range_string(range_str: &str) -> RangeParseResult {
-    let re = Regex::new(r"\((-?\d+)\s*-\s*(-?\d+)\)").unwrap();
-    if let Some(caps) = re.captures(range_str) {
-        let lower: i32 = caps.get(1).unwrap().as_str().parse()?;
-        let upper: i32 = caps.get(2).unwrap().as_str().parse()?;
-        Ok((lower, upper))
-    } else {
-        Err(format!("Error parsing {}", range_str).into())
-    }
 }
 
 fn parse_delete_target(text: &str, rows: usize) -> DeleteTargetResult {
@@ -245,7 +97,7 @@ fn parse_delete_target(text: &str, rows: usize) -> DeleteTargetResult {
 
 fn filter_by_index(df: DataFrame, list: Vec<i32>) -> DataFrame {
     let temp_col = build_incremental_int(df.height() as i32, 0, (df.height()) as i32);
-    let col_name = fake::fake_uuid();
+    let col_name = fake_uuid();
     let temp_series = Series::new(col_name.as_str(), temp_col);
     let mut indexes = list.clone();
     let mut predicate = col(col_name.as_str()).neq(lit(indexes.pop().unwrap()));
@@ -297,72 +149,5 @@ mod test {
 
         let df = create_dataframe(schema.clone(), 10, None, None).unwrap();
         assert_eq!(df.shape(), (10, 3));
-    }
-
-    #[test]
-    fn test_build_data_vector() {
-        let data = build_data_vector(10, || 1);
-        assert_eq!(data, vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
-    }
-
-    #[test]
-    fn test_build_incremental_int() {
-        let data = build_incremental_int(10, 0, 10);
-        assert_eq!(data, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    }
-    #[test]
-    fn test_build_incremental_int_with_negative() {
-        let data = build_incremental_int(10, -10, 10);
-        assert_eq!(data, vec![-10, -9, -8, -7, -6, -5, -4, -3, -2, -1]);
-    }
-
-    #[test]
-    fn test_build_incremental_underun_size() {
-        let data = build_incremental_int(10, 0, 5);
-        assert_eq!(data, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    }
-    #[test]
-    fn test_build_incremental_overrun_size() {
-        let data = build_incremental_int(10, 0, 200);
-        assert_eq!(data, vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
-    }
-
-    #[test]
-    fn test_parse_range_string() {
-        let data = parse_range_string("(0-10)");
-        assert_eq!(data.unwrap(), (0, 10));
-    }
-
-    #[test]
-    fn test_parse_negative_range_string() {
-        let data = parse_range_string("(-10-10)");
-        assert_eq!(data.unwrap(), (-10, 10));
-    }
-
-    #[test]
-    fn test_delete_target() {
-        let data = parse_delete_target("1,2,3", 10);
-        assert_eq!(data.unwrap(), vec![1, 2, 3]);
-
-        let data = parse_delete_target("1-3", 10);
-        assert_eq!(data.unwrap(), vec![1, 2, 3]);
-
-        let data = parse_delete_target("5", 10);
-        assert_eq!(data.unwrap(), vec![5]);
-
-        let data = parse_delete_target("random", 10);
-        assert!(data.unwrap().len() >= 1);
-
-        let data = parse_delete_target("rand", 10);
-        assert!(data.unwrap().len() >= 1);
-
-        let bad_result = parse_delete_target("xyz", 10);
-        assert!(bad_result.is_err());
-
-        let bad_result = parse_delete_target("100-2,3", 10);
-        assert!(bad_result.is_err());
-
-        let bad_result = parse_delete_target("", 10);
-        assert!(bad_result.is_err());
     }
 }
