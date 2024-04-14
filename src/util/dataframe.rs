@@ -172,12 +172,10 @@ pub fn create_dataframe(
 
     let data_frame = match delete_target {
         Some(target) => {
-            let delete_target = parse_delete_target(target.as_str(), size)?;
-            println!("Deleting: {:?}", delete_target);
+            let delete_indexes = parse_delete_target(target.as_str(), size)?;
+            println!("Deleting: {:?}", delete_indexes);
             let mut new_df = data_frame.clone();
-            for index in delete_target {
-                new_df = filter_by_index(new_df, index);
-            }
+            new_df = filter_by_index(new_df, delete_indexes);
             new_df
         }
         None => data_frame,
@@ -245,15 +243,21 @@ fn parse_delete_target(text: &str, rows: usize) -> DeleteTargetResult {
     Err(format!("Error parsing delete target: {}", text).into())
 }
 
-fn filter_by_index(df: DataFrame, index: i32) -> DataFrame {
+fn filter_by_index(df: DataFrame, list: Vec<i32>) -> DataFrame {
     let temp_col = build_incremental_int(df.height() as i32, 0, (df.height()) as i32);
     let col_name = fake::fake_uuid();
     let temp_series = Series::new(col_name.as_str(), temp_col);
+    let mut indexes = list.clone();
+    let mut predicate = col(col_name.as_str()).neq(lit(indexes.pop().unwrap()));
+
+    for i in list {
+        predicate = predicate.clone().and(col(col_name.as_str()).neq(lit(i)));
+    }
 
     let new_df = df
         .lazy()
         .with_columns([temp_series.lit()])
-        .filter(col(col_name.as_str()).neq(lit(index)))
+        .filter(predicate)
         .drop([col_name.as_str()])
         .collect()
         .unwrap();
