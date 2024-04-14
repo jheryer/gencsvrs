@@ -249,6 +249,7 @@ pub fn unknown_string() -> String {
     String::from("unknown")
 }
 mod test {
+    #![allow(unused_imports)]
     use super::*;
 
     #[test]
