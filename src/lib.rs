@@ -16,12 +16,18 @@ pub fn run(
     parquet: bool,
     append_target: Option<String>,
     delete_target: Option<String>,
+    er_target: Option<String>,
 ) -> RunResult<()> {
     let csv = if csv == false && parquet == false {
         true
     } else {
         csv
     };
+
+    if let Some(er_target) = er_target {
+        println!("{}",er_target);
+        return Ok(());
+    }
 
     if let Some(schema) = schema {
         let tokenized_schema = parse_schema(schema.as_str());

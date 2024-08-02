@@ -26,6 +26,9 @@ pub struct Args {
     ///Delete rows by index 1 or 1,2,3 or 1-3
     #[arg(short, long)]
     delete_target: Option<String>,
+    ///ER Diagram (mermaid er file)
+    #[arg(short, long)]
+    er_target: Option<String>,
 }
 
 fn main() {
@@ -38,6 +41,7 @@ fn main() {
         args.parquet,
         args.append_target,
         args.delete_target,
+        args.er_target
     ) {
         eprintln!("{}", e);
         std::process::exit(1);
