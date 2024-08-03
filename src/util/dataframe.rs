@@ -1,14 +1,23 @@
 use crate::util::fake::build_incremental_int;
 use crate::util::fake::create_column;
 use crate::util::fake::fake_uuid;
+use crate::util::scanner::{read_file, Scanner};
 use crate::util::schema::Schema;
 use polars::prelude::*;
 use rand::Rng;
 use regex::Regex;
 use std::error::Error;
-
 type DataFrameResult = Result<DataFrame, Box<dyn Error>>;
 type DeleteTargetResult = Result<Vec<i32>, Box<dyn Error>>;
+type ScannerResult<T> = Result<T, Box<dyn Error>>;
+
+pub fn create_from_erd(filename: &str) -> ScannerResult<()> {
+    let source = read_file(filename)?;
+    let mut scanner = Scanner::new(source);
+    scanner.scan_tokens();
+    scanner.print_tokens();
+    Ok(())
+}
 
 fn data_frame_from_file(path: &str) -> DataFrameResult {
     let mut file = std::fs::File::open(path)?;

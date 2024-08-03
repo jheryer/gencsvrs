@@ -7,7 +7,7 @@ use Box;
 
 use util::output::{CSVFile, Output, ParquetFile};
 
-use util::er::create_from_erd;
+use util::dataframe::create_from_erd;
 
 type RunResult<T> = Result<T, Box<dyn Error>>;
 
@@ -28,7 +28,7 @@ pub fn run(
     };
 
     if let Some(er_target) = er_target {
-        println!("{}",er_target);
+        println!("{}", er_target);
         create_from_erd(&er_target)?;
         return Ok(());
     }
