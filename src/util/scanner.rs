@@ -12,10 +12,7 @@ enum TokenType {
     //characters
     BraceOpen,
     BraceClose,
-    Space,
     //containers
-    Entity,
-    Label,
     //relationships
     RelationshipZeroOneLeft,
     RelationshipZeroOneRight,
@@ -113,7 +110,11 @@ impl Scanner {
         while !self.is_at_end() && self.peek().is_alphanumeric() {
             lexeme.push(self.advance());
         }
-        self.add_token(TokenType::Identifier, lexeme);
+
+        match lexeme {
+            String::from("erDiagram") => self.add_token(TokenType::DiagramStart, lexeme),
+            _ => self.add_token(TokenType::Identifier, lexeme),
+        }
     }
 
     fn add_token(&mut self, token_type: TokenType, lexeme: String) {
