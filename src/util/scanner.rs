@@ -3,8 +3,6 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::path::Path;
 
-type ScannerResult<T> = Result<T, Box<dyn Error>>;
-
 #[derive(Debug, Eq, PartialEq)]
 enum TokenType {
     Identifier,
