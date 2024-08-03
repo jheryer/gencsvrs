@@ -9,11 +9,9 @@ type ScannerResult<T> = Result<T, Box<dyn Error>>;
 enum TokenType {
     Identifier,
     DiagramStart,
-    //characters
     BraceOpen,
     BraceClose,
-    //containers
-    //relationships
+    RelationshipLabel,
     RelationshipZeroOneLeft,
     RelationshipZeroOneRight,
     RelationshipExactlyOne,
@@ -82,6 +80,7 @@ impl Scanner {
                     self.add_token(TokenType::BraceClose, String::from("}"));
                 }
             }
+            ':' => self.add_token(TokenType::RelationshipLabel, String::from(":")),
             ' ' | '\r' | '\t' => {}
             '\n' => self.line += 1,
             _ => {
@@ -105,14 +104,18 @@ impl Scanner {
         true
     }
 
+    fn is_identifier(&self, c: char) -> bool {
+        c.is_alphanumeric() || c == '_' || c == '-'
+    }
+
     fn scan_identifier(&mut self, start: char) {
         let mut lexeme = start.to_string();
-        while !self.is_at_end() && self.peek().is_alphanumeric() {
+        while !self.is_at_end() && self.is_identifier(self.peek()) {
             lexeme.push(self.advance());
         }
 
-        match lexeme {
-            String::from("erDiagram") => self.add_token(TokenType::DiagramStart, lexeme),
+        match lexeme.as_str() {
+            "erDiagram" => self.add_token(TokenType::DiagramStart, lexeme),
             _ => self.add_token(TokenType::Identifier, lexeme),
         }
     }
@@ -136,14 +139,6 @@ impl Scanner {
             '\0'
         } else {
             self.source.chars().nth(self.current).unwrap()
-        }
-    }
-
-    fn peek_next(&self) -> char {
-        if self.is_at_end() {
-            '\0'
-        } else {
-            self.source.chars().nth(self.current + 1).unwrap()
         }
     }
 
@@ -297,6 +292,48 @@ mod tests {
             lexeme: "}|".to_string(),
             line: 1,
         }];
+
+        assert_eq!(scanner.tokens, expected_tokens);
+    }
+
+    #[test]
+    fn test_identifier() {
+        let source = "  hello-world  ".to_string();
+        let mut scanner = Scanner::new(source);
+        scanner.scan_tokens();
+
+        let expected_tokens = vec![Token {
+            token_type: TokenType::Identifier,
+            lexeme: "hello-world".to_string(),
+            line: 1,
+        }];
+
+        assert_eq!(scanner.tokens, expected_tokens);
+    }
+
+    #[test]
+    fn test_relationship_label() {
+        let source = "  hello : world  ".to_string();
+        let mut scanner = Scanner::new(source);
+        scanner.scan_tokens();
+
+        let expected_tokens = vec![
+            Token {
+                token_type: TokenType::Identifier,
+                lexeme: "hello".to_string(),
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::RelationshipLabel,
+                lexeme: ":".to_string(),
+                line: 1,
+            },
+            Token {
+                token_type: TokenType::Identifier,
+                lexeme: "world".to_string(),
+                line: 1,
+            },
+        ];
 
         assert_eq!(scanner.tokens, expected_tokens);
     }
