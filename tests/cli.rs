@@ -97,15 +97,50 @@ fn test_er_subcommand_listed_in_help() -> TestResult {
 }
 
 #[test]
-fn test_er_scans_valid_fixture() -> TestResult {
+fn test_er_generates_csv_files_for_valid_fixture() -> TestResult {
+    let out_dir = std::env::temp_dir().join("gencsv_cli_er_fixture_test");
+    let _ = fs::remove_dir_all(&out_dir);
     Command::cargo_bin(NAME)?
-        .args(["er", "tests/fixtures/er/car_person.mmd"])
+        .args([
+            "er",
+            "tests/fixtures/er/car_person.mmd",
+            "--out",
+            out_dir.to_str().unwrap(),
+        ])
         .assert()
         .success()
-        .stdout(predicate::str::contains("erDiagram"))
-        .stdout(predicate::str::contains("CAR"))
-        .stdout(predicate::str::contains("NAMED-DRIVER"))
-        .stdout(predicate::str::contains("||--o{"));
+        .stderr(predicate::str::contains("wrote"))
+        .stderr(predicate::str::contains("PERSON"))
+        .stderr(predicate::str::contains("CAR"));
+    assert!(out_dir.join("PERSON.csv").exists(), "PERSON.csv missing");
+    assert!(out_dir.join("CAR.csv").exists(), "CAR.csv missing");
+    let _ = fs::remove_dir_all(&out_dir);
+    Ok(())
+}
+
+#[test]
+fn test_er_generates_junction_for_many_to_many() -> TestResult {
+    let out_dir = std::env::temp_dir().join("gencsv_cli_er_mn_test");
+    let _ = fs::remove_dir_all(&out_dir);
+    Command::cargo_bin(NAME)?
+        .args([
+            "er",
+            "tests/fixtures/er/student_course_mn.mmd",
+            "--out",
+            out_dir.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("STUDENT"))
+        .stderr(predicate::str::contains("COURSE"))
+        .stderr(predicate::str::contains("STUDENT_COURSE"));
+    assert!(out_dir.join("STUDENT.csv").exists(), "STUDENT.csv missing");
+    assert!(out_dir.join("COURSE.csv").exists(), "COURSE.csv missing");
+    assert!(
+        out_dir.join("STUDENT_COURSE.csv").exists(),
+        "STUDENT_COURSE.csv missing"
+    );
+    let _ = fs::remove_dir_all(&out_dir);
     Ok(())
 }
 

@@ -20,7 +20,8 @@ id,name,email,joined
   file and optionally drop rows by index.
 
 For deeper usage, see [docs/USAGE.md](docs/USAGE.md). For all available data
-types and their modifiers, see [Data Types](#data-types) below.
+types and their modifiers, see [Data Types](#data-types) below. For multi-table
+relational data generation see [gencsv er](#gencsv-er--relational-data-from-an-er-diagram).
 
 ---
 
@@ -176,6 +177,51 @@ Types that accept a modifier:
   short flag.
 - `random` / `rand` deletes a random number of random row indexes (handy for
   fuzz fixtures).
+
+---
+
+## gencsv er — relational data from an ER diagram
+
+Generate one CSV (or Parquet) file per entity — plus junction tables for M:N
+relationships — with FK columns automatically populated from the parent's PK.
+
+```sh
+gencsv er schema.mmd -r 100 --out ./data
+```
+
+Write a [Mermaid `erDiagram`](https://mermaid.js.org/syntax/entityRelationshipDiagram.html)
+file and pass it to `gencsv er`. Every entity block becomes a file; every
+relationship wires the FK column automatically.
+
+```
+erDiagram
+    CUSTOMER {
+        int    id   PK
+        string name
+    }
+    ORDER {
+        int id PK
+        int customer_id FK
+    }
+    CUSTOMER ||--o{ ORDER : places
+```
+
+```sh
+gencsv er shop.mmd -r 500 --rows-per ORDER=2000 --out ./data
+# data/CUSTOMER.csv  — 500 rows
+# data/ORDER.csv     — 2 000 rows, customer_id ∈ CUSTOMER.id
+```
+
+**Flags:**
+
+| Flag | Default | Description |
+|---|---|---|
+| `--out` / `-o` | `./out` | Output directory (created if needed) |
+| `--rows` / `-r` | `10` | Default rows per entity |
+| `--rows-per ENTITY=N` | — | Per-entity override (repeatable) |
+| `--format` / `-F` | `csv` | `csv` or `parquet` |
+
+See [docs/ERD.md](docs/ERD.md) for supported types, glyph reference, and validation rules.
 
 ---
 

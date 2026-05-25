@@ -1,6 +1,10 @@
 pub mod dataframe;
 pub mod dialect;
+pub mod erd_ast;
 pub mod fake;
+pub mod generator;
+pub mod multi_file_sink;
 pub mod output;
+pub mod parser;
 pub mod scanner;
 pub mod schema;
