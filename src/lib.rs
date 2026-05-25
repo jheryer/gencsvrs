@@ -1,9 +1,11 @@
 mod util;
 use std::error::Error;
+use std::path::PathBuf;
 use util::schema::{default_schema, parse_schema};
 use util::{dataframe::create_dataframe, output::Console};
 
 use crate::util::output::{CSVFile, Output, ParquetFile};
+use crate::util::scanner;
 type RunResult<T> = Result<T, Box<dyn Error>>;
 
 // D1: re-export dialect API so D2's `--target` CLI flag and DDL emitter can
