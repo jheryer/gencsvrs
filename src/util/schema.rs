@@ -7,31 +7,27 @@ pub struct Schema {
 
 impl Schema {
     pub fn from_string(input: &str) -> Option<Schema> {
-        let input = input.replace(" ", "");
+        let input = input.replace(' ', "");
         let parts: Vec<&str> = input.split(':').collect();
         if !(parts.len() == 2 || parts.len() == 3) {
-            println!("Bad Schema: {:?} is invalid", parts);
+            eprintln!("ignoring invalid schema column: {parts:?}");
             None
         } else {
             Some(Schema {
                 name: parts[0].trim().to_string(),
                 datatype: parts[1].trim().to_string(),
-                modifier: match parts.get(2) {
-                    Some(xyz) => Some(xyz.trim().to_string()),
-                    None => None,
-                },
+                modifier: parts.get(2).map(|m| m.trim().to_string()),
             })
         }
     }
 }
 
 pub fn parse_schema(input: &str) -> Vec<Schema> {
-    let trimmed_input = input.trim_end_matches(',');
-    let schema: Vec<Schema> = trimmed_input
+    input
+        .trim_end_matches(',')
         .split(',')
-        .filter_map(|column_str| Schema::from_string(column_str))
-        .collect();
-    return schema;
+        .filter_map(Schema::from_string)
+        .collect()
 }
 
 pub fn default_schema() -> Vec<Schema> {
@@ -61,7 +57,6 @@ pub fn default_schema() -> Vec<Schema> {
 
 #[cfg(test)]
 mod test {
-
     use super::*;
 
     #[test]
@@ -70,8 +65,8 @@ mod test {
         let subject = parse_schema(input);
 
         assert_eq!(4, subject.len());
-        assert_eq!("col1", subject.get(0).unwrap().name);
-        assert_eq!("STRING", subject.get(0).unwrap().datatype);
+        assert_eq!("col1", subject.first().unwrap().name);
+        assert_eq!("STRING", subject.first().unwrap().datatype);
         assert_eq!("col2", subject.get(1).unwrap().name);
         assert_eq!("INT", subject.get(1).unwrap().datatype);
         assert_eq!("col3", subject.get(2).unwrap().name);
