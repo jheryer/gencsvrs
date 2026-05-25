@@ -8,7 +8,7 @@ type RunResult<T> = Result<T, Box<dyn Error>>;
 
 // D1: re-export dialect API so D2's `--target` CLI flag and DDL emitter can
 // reach it without poking through `util::`.
-pub use util::dialect::{Dialect, DialectError, to_sql_type};
+pub use util::dialect::{to_sql_type, Dialect, DialectError};
 
 pub fn run(
     schema: Option<String>,
