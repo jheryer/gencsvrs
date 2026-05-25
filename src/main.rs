@@ -43,6 +43,12 @@ struct FlatArgs {
     /// Delete rows by index 1 or 1,2,3 or 1-3
     #[arg(short, long)]
     delete_target: Option<String>,
+    /// Emit a dialect-correct CREATE TABLE DDL file next to the data file
+    #[arg(long, value_enum)]
+    target: Option<gencsv::Dialect>,
+    /// Suppress DDL emission when --target is set
+    #[arg(long)]
+    no_ddl: bool,
 }
 
 #[derive(CLAPArgs)]
@@ -100,6 +106,8 @@ fn main() {
             cli.flat.parquet,
             cli.flat.append_target,
             cli.flat.delete_target,
+            cli.flat.target,
+            cli.flat.no_ddl,
         ),
     };
     if let Err(e) = result {

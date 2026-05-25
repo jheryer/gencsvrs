@@ -1,4 +1,5 @@
 pub mod dataframe;
+pub mod ddl;
 pub mod dialect;
 pub mod erd_ast;
 pub mod fake;

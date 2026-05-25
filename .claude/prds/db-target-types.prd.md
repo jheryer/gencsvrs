@@ -242,7 +242,7 @@ All errors exit non-zero and produce no partial output.
 
 | # | Milestone | Plan | Status |
 |---|---|---|---|
-| D1 | `Dialect` enum + complete type-mapping table + unit tests (no I/O) | [.claude/plans/db-target-types-d1.plan.md](../plans/db-target-types-d1.plan.md) | in-progress |
+| D1 | `Dialect` enum + complete type-mapping table + unit tests (no I/O) | [.claude/plans/db-target-types-d1.plan.md](../plans/db-target-types-d1.plan.md) | done |
 | D2 | `DdlEmitter` writes `<table>.ddl.<dialect>.sql` for flat-table mode + per-dialect golden tests | _pending_ | pending |
 | D3 | `LoadCmdEmitter` writes `<table>.load.<dialect>.{sql,sh,py}` + per-dialect golden tests | _pending_ | pending |
 | D4 | Parquet logical-type alignment per dialect (BigQuery, Spark) | _pending_ | pending |
