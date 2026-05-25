@@ -1,0 +1,16 @@
+erDiagram
+    CAR {
+        int id PK
+        string make
+    }
+    PERSON {
+        int id PK
+        string name
+    }
+    NAMED-DRIVER {
+        int id PK
+        int car_id FK
+        int person_id FK
+    }
+    CAR ||--o{ NAMED-DRIVER : "is driven by"
+    PERSON ||--o{ NAMED-DRIVER : "drives"
