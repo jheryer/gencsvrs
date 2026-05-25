@@ -248,8 +248,8 @@ pub fn value_string() -> String {
 pub fn unknown_string() -> String {
     String::from("unknown")
 }
+#[cfg(test)]
 mod test {
-    #![allow(unused_imports)]
     use super::*;
 
     #[test]
@@ -284,5 +284,46 @@ mod test {
     fn test_parse_negative_range_string() {
         let data = parse_range_string("(-10-10)");
         assert_eq!(data.unwrap(), (-10, 10));
+    }
+
+    #[test]
+    fn test_capitalize_first_handles_ascii() {
+        assert_eq!(capitalize_first("hello"), "Hello");
+    }
+
+    #[test]
+    fn test_capitalize_first_handles_multibyte_utf8() {
+        // The previous `s[0..1]` slice would panic on multi-byte UTF-8 first chars.
+        assert_eq!(capitalize_first("über"), "Über");
+        assert_eq!(capitalize_first("éclair"), "Éclair");
+    }
+
+    #[test]
+    fn test_capitalize_first_handles_empty_string() {
+        assert_eq!(capitalize_first(""), "");
+    }
+
+    #[test]
+    fn test_create_column_int_rng_without_modifier_uses_default() {
+        // Previously `element.modifier.as_ref().unwrap()` would panic.
+        // After the fix the column falls back to (0..size).
+        let element = Schema {
+            name: "id".to_string(),
+            datatype: "INT_RNG".to_string(),
+            modifier: None,
+        };
+        let series = create_column(element, 5);
+        assert_eq!(series.len(), 5);
+    }
+
+    #[test]
+    fn test_create_column_int_rng_with_bad_modifier_falls_back() {
+        let element = Schema {
+            name: "id".to_string(),
+            datatype: "INT_RNG".to_string(),
+            modifier: Some("garbage".to_string()),
+        };
+        let series = create_column(element, 4);
+        assert_eq!(series.len(), 4);
     }
 }

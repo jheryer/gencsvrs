@@ -71,3 +71,33 @@ pub fn run(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn parquet_without_file_target_is_rejected() {
+        // Previously: silently generated and discarded data, exit 0.
+        // Now: must surface a clear error to the user.
+        let result = run(
+            Some("a:INT,b:STRING".to_string()),
+            3,
+            None,  // no -f / --file-target
+            false, // -c
+            true,  // -p
+            None,
+            None,
+        );
+        assert!(
+            result.is_err(),
+            "expected Err when --parquet is set without --file-target"
+        );
+    }
+
+    #[test]
+    fn empty_schema_returns_descriptive_error() {
+        let result = run(Some("".to_string()), 3, None, true, false, None, None);
+        assert!(result.is_err());
+    }
+}
