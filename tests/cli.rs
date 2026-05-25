@@ -176,3 +176,71 @@ fn test_flat_mode_still_works_after_subcommand_refactor() -> TestResult {
         .stdout(predicate::str::contains("id,name"));
     Ok(())
 }
+
+#[test]
+fn test_target_postgres_writes_ddl_file() -> TestResult {
+    let data = std::env::temp_dir().join("gencsv_ddl_test_users.csv");
+    let ddl = std::env::temp_dir().join("gencsv_ddl_test_users.ddl.postgres.sql");
+    let _ = fs::remove_file(&data);
+    let _ = fs::remove_file(&ddl);
+    Command::cargo_bin(NAME)?
+        .args([
+            "-s",
+            "id:INT_INC,name:STRING,joined:DATE",
+            "-r",
+            "3",
+            "-c",
+            "-f",
+            data.to_str().unwrap(),
+            "--target",
+            "postgres",
+        ])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("ddl.postgres.sql"));
+    assert!(data.exists(), "data file missing");
+    assert!(ddl.exists(), "DDL file missing");
+    let golden = fs::read_to_string("tests/fixtures/dialects/users.ddl.postgres.sql")?;
+    let actual = fs::read_to_string(&ddl)?;
+    assert_eq!(actual, golden, "DDL content mismatch");
+    let _ = fs::remove_file(&data);
+    let _ = fs::remove_file(&ddl);
+    Ok(())
+}
+
+#[test]
+fn test_target_without_file_target_is_rejected() -> TestResult {
+    Command::cargo_bin(NAME)?
+        .args(["-s", "id:INT_INC", "-r", "3", "--target", "mysql"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("--target requires --file-target"));
+    Ok(())
+}
+
+#[test]
+fn test_no_ddl_suppresses_ddl_file() -> TestResult {
+    let data = std::env::temp_dir().join("gencsv_no_ddl_test.csv");
+    let ddl = std::env::temp_dir().join("gencsv_no_ddl_test.ddl.mysql.sql");
+    let _ = fs::remove_file(&data);
+    let _ = fs::remove_file(&ddl);
+    Command::cargo_bin(NAME)?
+        .args([
+            "-s",
+            "id:INT_INC",
+            "-r",
+            "2",
+            "-c",
+            "-f",
+            data.to_str().unwrap(),
+            "--target",
+            "mysql",
+            "--no-ddl",
+        ])
+        .assert()
+        .success();
+    assert!(data.exists(), "data file missing");
+    assert!(!ddl.exists(), "DDL file should not exist with --no-ddl");
+    let _ = fs::remove_file(&data);
+    Ok(())
+}
