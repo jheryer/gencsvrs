@@ -164,11 +164,11 @@ All errors include the source file path and 1-based line number where applicable
 
 | # | Milestone | Plan | Status |
 |---|---|---|---|
-| M1 | Port and clean scanner from `feature/erdiagram`; add `gencsv er` subcommand stub | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | in-progress |
-| M2 | Parser + `ErdAst` model + validation pass (PK count, undeclared refs) | _pending_ | pending |
-| M3 | Topological generator + 1:1, 1:N, N:1 FK wiring + `MultiFileSink` | _pending_ | pending |
-| M4 | Many-to-many junction table emission | _pending_ | pending |
-| M5 | `docs/ERD.md` with supported syntax reference + README quickstart + ≥80% coverage gate | _pending_ | pending |
+| M1 | Port and clean scanner from `feature/erdiagram`; add `gencsv er` subcommand stub | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | done |
+| M2 | Parser + `ErdAst` model + validation pass (PK count, undeclared refs) | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | done |
+| M3 | Topological generator + 1:1, 1:N, N:1 FK wiring + `MultiFileSink` | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | done |
+| M4 | Many-to-many junction table emission | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | done |
+| M5 | `docs/ERD.md` with supported syntax reference + README quickstart + ≥80% coverage gate | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | done |
 
 Each milestone follows the TDD workflow (test-first, RED→GREEN→refactor) and lands as its own PR.
 

@@ -1,16 +1,65 @@
 mod util;
+use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
 use util::schema::{default_schema, parse_schema};
 use util::{dataframe::create_dataframe, output::Console};
 
+use crate::util::generator::generate;
+use crate::util::multi_file_sink::{MultiFileSink, SinkFormat};
 use crate::util::output::{CSVFile, Output, ParquetFile};
-use crate::util::scanner;
+use crate::util::parser::parse as parse_erd;
+use crate::util::scanner::scan as scan_erd;
 type RunResult<T> = Result<T, Box<dyn Error>>;
 
 // D1: re-export dialect API so D2's `--target` CLI flag and DDL emitter can
 // reach it without poking through `util::`.
 pub use util::dialect::{to_sql_type, Dialect, DialectError};
+
+/// Output format selector for the `er` subcommand.
+#[derive(Clone, Copy, Debug)]
+pub enum ErFormat {
+    Csv,
+    Parquet,
+}
+
+impl From<ErFormat> for SinkFormat {
+    fn from(f: ErFormat) -> Self {
+        match f {
+            ErFormat::Csv => SinkFormat::Csv,
+            ErFormat::Parquet => SinkFormat::Parquet,
+        }
+    }
+}
+
+/// Entry point for the `gencsv er <FILE>` subcommand. Scans, parses,
+/// validates, generates, and writes one file per entity (plus one per M:N
+/// junction) under `out`.
+pub fn run_er(
+    file: &str,
+    rows: usize,
+    rows_per: Vec<(String, usize)>,
+    out: PathBuf,
+    format: ErFormat,
+) -> RunResult<()> {
+    let contents = std::fs::read_to_string(file)
+        .map_err(|e| format!("failed to read ER source '{file}': {e}"))?;
+
+    let tokens = scan_erd(&contents).map_err(|e| format!("{file}:{}: {}", e.line, e.message))?;
+
+    let ast = parse_erd(tokens).map_err(|e| format!("{file}: {}", e.message))?;
+
+    let rows_per_map: HashMap<String, usize> = rows_per.into_iter().collect();
+    let frames = generate(&ast, rows, &rows_per_map).map_err(|e| e.message)?;
+
+    let sink = MultiFileSink::new(out, format.into())?;
+    for (name, mut df) in frames {
+        let path = sink.write(&name, &mut df)?;
+        eprintln!("wrote {}", path.display());
+    }
+
+    Ok(())
+}
 
 pub fn run(
     schema: Option<String>,
@@ -21,10 +70,8 @@ pub fn run(
     append_target: Option<String>,
     delete_target: Option<String>,
 ) -> RunResult<()> {
-    // Default to CSV when neither output flag is set.
     let csv = csv || !parquet;
 
-    // Parquet output requires a target file; otherwise data would be silently discarded.
     if parquet && file_target.is_none() {
         return Err(
             "--parquet output requires --file-target <PATH>; refusing to discard generated rows"
@@ -64,21 +111,16 @@ mod test {
 
     #[test]
     fn parquet_without_file_target_is_rejected() {
-        // Previously: silently generated and discarded data, exit 0.
-        // Now: must surface a clear error to the user.
         let result = run(
             Some("a:INT,b:STRING".to_string()),
             3,
-            None,  // no -f / --file-target
-            false, // -c
-            true,  // -p
+            None,
+            false,
+            true,
             None,
             None,
         );
-        assert!(
-            result.is_err(),
-            "expected Err when --parquet is set without --file-target"
-        );
+        assert!(result.is_err());
     }
 
     #[test]
@@ -139,5 +181,46 @@ mod test {
     fn run_default_schema_succeeds() {
         let result = run(None, 5, None, true, false, None, None);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn run_er_writes_files_per_entity() {
+        let src = "\
+erDiagram
+  PARENT { int id PK }
+  CHILD { int id PK }
+  PARENT ||--o{ CHILD : has
+";
+        let dir = std::env::temp_dir().join("gencsv_run_er_test_basic");
+        let _ = std::fs::remove_dir_all(&dir);
+        let mmd = std::env::temp_dir().join("gencsv_run_er_test_basic.mmd");
+        std::fs::write(&mmd, src).unwrap();
+        let r = run_er(mmd.to_str().unwrap(), 5, vec![], dir.clone(), ErFormat::Csv);
+        assert!(r.is_ok(), "run_er failed: {r:?}");
+        assert!(dir.join("PARENT.csv").exists());
+        assert!(dir.join("CHILD.csv").exists());
+        let _ = std::fs::remove_dir_all(&dir);
+        let _ = std::fs::remove_file(&mmd);
+    }
+
+    #[test]
+    fn run_er_emits_junction_for_many_to_many() {
+        let src = "\
+erDiagram
+  STUDENT { int id PK }
+  COURSE { int id PK }
+  STUDENT }o--o{ COURSE : enrolled
+";
+        let dir = std::env::temp_dir().join("gencsv_run_er_test_mn");
+        let _ = std::fs::remove_dir_all(&dir);
+        let mmd = std::env::temp_dir().join("gencsv_run_er_test_mn.mmd");
+        std::fs::write(&mmd, src).unwrap();
+        let r = run_er(mmd.to_str().unwrap(), 5, vec![], dir.clone(), ErFormat::Csv);
+        assert!(r.is_ok(), "run_er failed: {r:?}");
+        assert!(dir.join("STUDENT.csv").exists());
+        assert!(dir.join("COURSE.csv").exists());
+        assert!(dir.join("STUDENT_COURSE.csv").exists());
+        let _ = std::fs::remove_dir_all(&dir);
+        let _ = std::fs::remove_file(&mmd);
     }
 }
