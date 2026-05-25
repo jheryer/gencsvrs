@@ -85,3 +85,59 @@ fn test_bad_schema_returns_error() -> TestResult {
         .failure();
     Ok(())
 }
+
+#[test]
+fn test_er_subcommand_listed_in_help() -> TestResult {
+    Command::cargo_bin(NAME)?
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("er"));
+    Ok(())
+}
+
+#[test]
+fn test_er_scans_valid_fixture() -> TestResult {
+    Command::cargo_bin(NAME)?
+        .args(["er", "tests/fixtures/er/car_person.mmd"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("erDiagram"))
+        .stdout(predicate::str::contains("CAR"))
+        .stdout(predicate::str::contains("NAMED-DRIVER"))
+        .stdout(predicate::str::contains("||--o{"));
+    Ok(())
+}
+
+#[test]
+fn test_er_rejects_unsupported_glyph_with_line_number() -> TestResult {
+    Command::cargo_bin(NAME)?
+        .args(["er", "tests/fixtures/er/invalid_glyph.mmd"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("non-identifying"))
+        .stderr(predicate::str::contains("line 8"));
+    Ok(())
+}
+
+#[test]
+fn test_er_missing_file_returns_error() -> TestResult {
+    Command::cargo_bin(NAME)?
+        .args(["er", "/nonexistent/diagram.mmd"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("failed to read"));
+    Ok(())
+}
+
+#[test]
+fn test_flat_mode_still_works_after_subcommand_refactor() -> TestResult {
+    // Regression guard: adding the `er` subcommand must not break the
+    // existing flag-based mode.
+    Command::cargo_bin(NAME)?
+        .args(["-s", "id:INT_INC,name:VALUE", "-r", "3"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("id,name"));
+    Ok(())
+}

@@ -1,10 +1,46 @@
 mod util;
 use std::error::Error;
+use std::path::PathBuf;
 use util::schema::{default_schema, parse_schema};
 use util::{dataframe::create_dataframe, output::Console};
 
 use crate::util::output::{CSVFile, Output, ParquetFile};
+use crate::util::scanner;
 type RunResult<T> = Result<T, Box<dyn Error>>;
+
+/// Output format selector for the `er` subcommand. M1 only parses the flag;
+/// the actual sink wiring lands in M3.
+#[derive(Clone, Copy, Debug)]
+pub enum ErFormat {
+    Csv,
+    Parquet,
+}
+
+/// M1 entry point for the `gencsv er <FILE>` subcommand. Reads the Mermaid
+/// source, runs the scanner, and dumps the token stream to stdout. Parser and
+/// generator land in M2/M3 — the `rows`, `rows_per`, `out`, `format` args are
+/// parsed here so the CLI surface is stable, but they have no effect yet.
+pub fn run_er(
+    file: &str,
+    rows: usize,
+    rows_per: Vec<(String, usize)>,
+    out: PathBuf,
+    format: ErFormat,
+) -> RunResult<()> {
+    let _ = (rows, rows_per, out, format); // reserved for M2/M3
+
+    let contents = std::fs::read_to_string(file)
+        .map_err(|e| format!("failed to read ER source '{file}': {e}"))?;
+
+    let tokens =
+        scanner::scan(&contents).map_err(|e| format!("{file}:{}: {}", e.line, e.message))?;
+
+    for (line, tok) in tokens {
+        println!("{line}\t{tok:?}");
+    }
+
+    Ok(())
+}
 
 pub fn run(
     schema: Option<String>,
