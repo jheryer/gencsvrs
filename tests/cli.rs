@@ -61,9 +61,17 @@ fn test_int_rng_without_modifier_does_not_panic() -> TestResult {
 
 #[test]
 fn test_delete_negative_range_succeeds() -> TestResult {
-    // Negative-range delete (e.g. "-2-2") was unsupported. Should now parse.
+    // Negative-range delete (e.g. "-2-2") was unsupported by the parser.
+    // Use `--delete-target=...` to keep clap from interpreting the leading
+    // dash as a short flag.
     Command::cargo_bin(NAME)?
-        .args(["-s", "id:INT_INC,name:STRING", "-r", "5", "-d", "-2-2"])
+        .args([
+            "-s",
+            "id:INT_INC,name:STRING",
+            "-r",
+            "5",
+            "--delete-target=-2-2",
+        ])
         .assert()
         .success();
     Ok(())

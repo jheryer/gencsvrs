@@ -1,4 +1,3 @@
-extern crate fakeit;
 use crate::util::schema::Schema;
 use fake::faker::address::raw::*;
 use fake::faker::chrono::raw::*;
@@ -14,9 +13,15 @@ use fakeit::person;
 use polars::prelude::*;
 use regex::Regex;
 use std::error::Error;
+use std::sync::OnceLock;
 use uuid::Uuid;
 
 type RangeParseResult = Result<(i32, i32), Box<dyn Error>>;
+
+fn range_regex() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"\((-?\d+)\s*-\s*(-?\d+)\)").unwrap())
+}
 
 fn build_data_vector<T>(size: usize, generator: impl Fn() -> T) -> Vec<T> {
     let mut data: Vec<T> = Vec::with_capacity(size);
@@ -28,12 +33,21 @@ fn build_data_vector<T>(size: usize, generator: impl Fn() -> T) -> Vec<T> {
 
 pub fn build_incremental_int(size: i32, start: i32, end: i32) -> Vec<i32> {
     let end = if start - end < 0 { start + size } else { end };
-    (start..end as i32).collect::<Vec<i32>>()
+    (start..end).collect::<Vec<i32>>()
+}
+
+/// Capitalize the first character of `s`, preserving the rest verbatim.
+/// Safe for multi-byte UTF-8 inputs (the previous byte-slice version panicked).
+pub(crate) fn capitalize_first(s: &str) -> String {
+    let mut chars = s.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+    }
 }
 
 fn parse_range_string(range_str: &str) -> RangeParseResult {
-    let re = Regex::new(r"\((-?\d+)\s*-\s*(-?\d+)\)").unwrap();
-    if let Some(caps) = re.captures(range_str) {
+    if let Some(caps) = range_regex().captures(range_str) {
         let lower: i32 = caps.get(1).unwrap().as_str().parse()?;
         let upper: i32 = caps.get(2).unwrap().as_str().parse()?;
         Ok((lower, upper))
@@ -48,17 +62,22 @@ pub fn create_column(element: Schema, size: usize) -> Series {
         "INT" => Series::new(element.name.as_str(), build_data_vector(size, fake_int)),
         "INT_INC" => Series::new(
             element.name.as_str(),
-            build_incremental_int(size as i32, 0, size.clone() as i32),
+            build_incremental_int(size as i32, 0, size as i32),
         ),
         "INT_RNG" => {
-            let (lower, upper) =
-                match parse_range_string(element.modifier.as_ref().unwrap().as_str()) {
-                    Ok((lower, upper)) => (lower, upper),
-                    Err(e) => {
-                        eprintln!("Error parsing range: {} , using default range", e);
-                        (0, size as i32)
-                    }
-                };
+            let (lower, upper) = match element.modifier.as_deref() {
+                Some(m) => parse_range_string(m).unwrap_or_else(|e| {
+                    eprintln!("Error parsing INT_RNG modifier '{m}': {e}; using default range");
+                    (0, size as i32)
+                }),
+                None => {
+                    eprintln!(
+                        "INT_RNG column '{}' has no (lo-hi) modifier; using default range",
+                        element.name
+                    );
+                    (0, size as i32)
+                }
+            };
 
             Series::new(
                 element.name.as_str(),
@@ -134,7 +153,7 @@ pub fn fake_string() -> String {
 //Digit
 
 pub fn fake_int() -> i32 {
-    return (0..2147483647).fake::<i32>();
+    (0..2147483647).fake::<i32>()
 }
 
 pub fn fake_digit() -> String {
@@ -142,7 +161,7 @@ pub fn fake_digit() -> String {
 }
 // DECIMAL
 pub fn fake_decimal() -> f32 {
-    return (0.0..100000.0).fake::<f32>();
+    (0.0..100000.0).fake::<f32>()
 }
 //DATE
 pub fn fake_date() -> String {
@@ -199,11 +218,11 @@ pub fn fake_lorem_word() -> String {
 //LOREM_TITLE
 pub fn fake_lorem_title() -> String {
     let title: Vec<String> = Words(EN, 1..4).fake();
-    let cap_title: Vec<String> = title
+    title
         .iter()
-        .map(|s| s[0..1].to_uppercase() + &s[1..])
-        .collect();
-    cap_title.join(" ")
+        .map(|s| capitalize_first(s))
+        .collect::<Vec<String>>()
+        .join(" ")
 }
 
 //LOREM_SENTENCE
