@@ -6,6 +6,10 @@ use util::{dataframe::create_dataframe, output::Console};
 use crate::util::output::{CSVFile, Output, ParquetFile};
 type RunResult<T> = Result<T, Box<dyn Error>>;
 
+// D1: re-export dialect API so D2's `--target` CLI flag and DDL emitter can
+// reach it without poking through `util::`.
+pub use util::dialect::{Dialect, DialectError, to_sql_type};
+
 pub fn run(
     schema: Option<String>,
     rows: usize,
