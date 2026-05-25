@@ -362,11 +362,33 @@ mod test {
     #[test]
     fn test_create_column_all_plain_types_produce_correct_length() {
         let types = [
-            "STRING", "INT", "INT_INC", "VALUE", "DIGIT", "DECIMAL", "DATE",
-            "TIME", "DATE_TIME", "NAME", "ZIP_CODE", "COUNTRY_CODE", "STATE_NAME",
-            "STATE_ABBR", "LAT", "LON", "PHONE", "PRICE", "LOREM_WORD",
-            "LOREM_TITLE", "LOREM_SENTENCE", "LOREM_PARAGRAPH", "UUID",
-            "FIRST_NAME", "LAST_NAME", "SSN", "UNKNOWN_TYPE_FALLTHROUGH",
+            "STRING",
+            "INT",
+            "INT_INC",
+            "VALUE",
+            "DIGIT",
+            "DECIMAL",
+            "DATE",
+            "TIME",
+            "DATE_TIME",
+            "NAME",
+            "ZIP_CODE",
+            "COUNTRY_CODE",
+            "STATE_NAME",
+            "STATE_ABBR",
+            "LAT",
+            "LON",
+            "PHONE",
+            "PRICE",
+            "LOREM_WORD",
+            "LOREM_TITLE",
+            "LOREM_SENTENCE",
+            "LOREM_PARAGRAPH",
+            "UUID",
+            "FIRST_NAME",
+            "LAST_NAME",
+            "SSN",
+            "UNKNOWN_TYPE_FALLTHROUGH",
         ];
         for type_name in &types {
             let element = Schema {
