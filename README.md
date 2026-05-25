@@ -86,6 +86,12 @@ Options:
                                          the literal `random` / `rand`.
                                        Use `--delete-target=-2-2` (with `=`)
                                        for ranges that start with a negative.
+      --target <DIALECT>               Emit DDL + load-command files next to the
+                                       data file. Values: mysql, postgres,
+                                       sqlserver, bigquery, spark. Requires -f.
+      --no-ddl                         Suppress DDL file when --target is set
+      --no-load                        Suppress load-command file when --target
+                                       is set
   -h, --help                           Print help
   -V, --version                        Print version
 ```
@@ -220,8 +226,32 @@ gencsv er shop.mmd -r 500 --rows-per ORDER=2000 --out ./data
 | `--rows` / `-r` | `10` | Default rows per entity |
 | `--rows-per ENTITY=N` | — | Per-entity override (repeatable) |
 | `--format` / `-F` | `csv` | `csv` or `parquet` |
+| `--target <DIALECT>` | — | Emit DDL + load-command files (see below) |
+| `--no-ddl` | — | Suppress DDL file when `--target` is set |
+| `--no-load` | — | Suppress load-command file when `--target` is set |
 
 See [docs/ERD.md](docs/ERD.md) for supported types, glyph reference, and validation rules.
+
+---
+
+## Database DDL and load commands
+
+Pass `--target <dialect>` to emit a `CREATE TABLE` DDL file and a dialect-specific
+load-command snippet alongside your generated data.
+
+```sh
+# Flat mode — writes users.csv, users.ddl.postgres.sql, users.load.postgres.sql
+gencsv -s "id:INT_INC,name:NAME,email:STRING" -r 1000 -c -f users.csv \
+       --target postgres
+
+# ER mode — writes schema.ddl.mysql.sql + per-entity .load.mysql.sql files
+gencsv er shop.mmd -r 500 --out ./data --target mysql
+```
+
+Supported targets: `mysql`, `postgres`, `sqlserver`, `bigquery`, `spark`.
+
+See [docs/DIALECTS.md](docs/DIALECTS.md) for the full type-mapping table, load-command
+templates, and Parquet logical-type guidance for BigQuery and Spark.
 
 ---
 
