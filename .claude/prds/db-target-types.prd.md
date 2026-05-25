@@ -243,11 +243,11 @@ All errors exit non-zero and produce no partial output.
 | # | Milestone | Plan | Status |
 |---|---|---|---|
 | D1 | `Dialect` enum + complete type-mapping table + unit tests (no I/O) | [.claude/plans/db-target-types-d1.plan.md](../plans/db-target-types-d1.plan.md) | done |
-| D2 | `DdlEmitter` writes `<table>.ddl.<dialect>.sql` for flat-table mode + per-dialect golden tests | _pending_ | pending |
-| D3 | `LoadCmdEmitter` writes `<table>.load.<dialect>.{sql,sh,py}` + per-dialect golden tests | _pending_ | pending |
-| D4 | Parquet logical-type alignment per dialect (BigQuery, Spark) | _pending_ | pending |
-| D5 | ER-mode integration: emit one DDL per entity + FK constraints; junction tables get DDL too (depends on ER PRD M5) | _pending_ | pending |
-| D6 | `docs/DIALECTS.md` + README update + ≥80% coverage maintained | _pending_ | pending |
+| D2 | `DdlEmitter` writes `<table>.ddl.<dialect>.sql` for flat-table mode + per-dialect golden tests | _done_ | done |
+| D3 | `LoadCmdEmitter` writes `<table>.load.<dialect>.{sql,sh,py}` + per-dialect golden tests | _done_ | done |
+| D4 | Parquet logical-type alignment per dialect (BigQuery, Spark) | _done_ | done |
+| D5 | ER-mode integration: emit one DDL per entity + FK constraints; junction tables get DDL too (depends on ER PRD M5) | _done_ | done |
+| D6 | `docs/DIALECTS.md` + README update + ≥80% coverage maintained | _done_ | done |
 
 Each milestone follows the TDD workflow (test-first, RED→GREEN→refactor) and lands as its own PR. **Sequenced after the ER PRD's M1–M5 complete** so D5 has a real ER pipeline to plug into.
 

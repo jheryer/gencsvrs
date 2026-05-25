@@ -4,6 +4,7 @@ pub mod dialect;
 pub mod erd_ast;
 pub mod fake;
 pub mod generator;
+pub mod load_cmd;
 pub mod multi_file_sink;
 pub mod output;
 pub mod parser;

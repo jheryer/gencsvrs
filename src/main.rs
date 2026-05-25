@@ -16,7 +16,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
-    /// Generate relationally-consistent multi-table data from a Mermaid ER diagram (M1: scanner only)
+    /// Generate relationally-consistent multi-table data from a Mermaid ER diagram
     Er(ErArgs),
 }
 
@@ -43,30 +43,42 @@ struct FlatArgs {
     /// Delete rows by index 1 or 1,2,3 or 1-3
     #[arg(short, long)]
     delete_target: Option<String>,
-    /// Emit a dialect-correct CREATE TABLE DDL file next to the data file
+    /// Emit dialect-correct DDL and load-command files next to the data file
     #[arg(long, value_enum)]
     target: Option<gencsv::Dialect>,
-    /// Suppress DDL emission when --target is set
+    /// Suppress DDL file emission when --target is set
     #[arg(long)]
     no_ddl: bool,
+    /// Suppress load-command file emission when --target is set
+    #[arg(long)]
+    no_load: bool,
 }
 
 #[derive(CLAPArgs)]
 struct ErArgs {
     /// Path to a Mermaid `erDiagram` source file
     file: String,
-    /// Default row count per entity (parsed for M2; unused in M1)
+    /// Default row count per entity
     #[arg(short, long, default_value_t = 10)]
     rows: usize,
-    /// Per-entity row count override, repeatable: --rows-per ORDER=5000 (parsed for M2; unused in M1)
+    /// Per-entity row count override, repeatable: --rows-per ORDER=5000
     #[arg(long = "rows-per", value_parser = parse_rows_per)]
     rows_per: Vec<(String, usize)>,
-    /// Output directory (parsed for M3; unused in M1)
+    /// Output directory
     #[arg(short, long, default_value = "./out")]
     out: PathBuf,
-    /// Output format (parsed for M3; unused in M1)
+    /// Output format
     #[arg(short = 'F', long, value_enum, default_value_t = ErFormat::Csv)]
     format: ErFormat,
+    /// Emit dialect-correct DDL and load-command files next to each entity file
+    #[arg(long, value_enum)]
+    target: Option<gencsv::Dialect>,
+    /// Suppress DDL file emission when --target is set
+    #[arg(long)]
+    no_ddl: bool,
+    /// Suppress load-command file emission when --target is set
+    #[arg(long)]
+    no_load: bool,
 }
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
@@ -97,6 +109,9 @@ fn main() {
                 ErFormat::Csv => gencsv::ErFormat::Csv,
                 ErFormat::Parquet => gencsv::ErFormat::Parquet,
             },
+            args.target,
+            args.no_ddl,
+            args.no_load,
         ),
         None => gencsv::run(
             cli.flat.schema,
@@ -108,6 +123,7 @@ fn main() {
             cli.flat.delete_target,
             cli.flat.target,
             cli.flat.no_ddl,
+            cli.flat.no_load,
         ),
     };
     if let Err(e) = result {

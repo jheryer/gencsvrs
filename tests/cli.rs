@@ -219,6 +219,98 @@ fn test_target_without_file_target_is_rejected() -> TestResult {
 }
 
 #[test]
+fn test_target_postgres_writes_load_file() -> TestResult {
+    let data = std::env::temp_dir().join("gencsv_load_test_users.csv");
+    let load = std::env::temp_dir().join("gencsv_load_test_users.load.postgres.sql");
+    let _ = fs::remove_file(&data);
+    let _ = fs::remove_file(&load);
+    Command::cargo_bin(NAME)?
+        .args([
+            "-s",
+            "id:INT_INC,name:STRING",
+            "-r",
+            "2",
+            "-c",
+            "-f",
+            data.to_str().unwrap(),
+            "--target",
+            "postgres",
+        ])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("load.postgres.sql"));
+    assert!(load.exists(), "load file missing");
+    let content = fs::read_to_string(&load)?;
+    assert!(
+        content.contains("\\copy"),
+        "expected postgres \\copy: {content}"
+    );
+    let _ = fs::remove_file(&data);
+    let _ = fs::remove_file(&load);
+    Ok(())
+}
+
+#[test]
+fn test_no_load_suppresses_load_file() -> TestResult {
+    let data = std::env::temp_dir().join("gencsv_no_load_test.csv");
+    let load = std::env::temp_dir().join("gencsv_no_load_test.load.mysql.sql");
+    let _ = fs::remove_file(&data);
+    let _ = fs::remove_file(&load);
+    Command::cargo_bin(NAME)?
+        .args([
+            "-s",
+            "id:INT_INC",
+            "-r",
+            "2",
+            "-c",
+            "-f",
+            data.to_str().unwrap(),
+            "--target",
+            "mysql",
+            "--no-load",
+        ])
+        .assert()
+        .success();
+    assert!(!load.exists(), "load file should not exist with --no-load");
+    let _ = fs::remove_file(&data);
+    Ok(())
+}
+
+#[test]
+fn test_er_target_postgres_writes_ddl_and_load() -> TestResult {
+    let out_dir = std::env::temp_dir().join("gencsv_cli_er_target_test");
+    let _ = fs::remove_dir_all(&out_dir);
+    Command::cargo_bin(NAME)?
+        .args([
+            "er",
+            "tests/fixtures/er/car_person.mmd",
+            "--out",
+            out_dir.to_str().unwrap(),
+            "--target",
+            "postgres",
+        ])
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("schema.ddl.postgres.sql"))
+        .stderr(predicate::str::contains("load.postgres.sql"));
+    assert!(
+        out_dir.join("schema.ddl.postgres.sql").exists(),
+        "DDL missing"
+    );
+    let ddl = fs::read_to_string(out_dir.join("schema.ddl.postgres.sql"))?;
+    assert!(
+        ddl.contains("CREATE TABLE"),
+        "DDL should have CREATE TABLE: {ddl}"
+    );
+    assert!(
+        ddl.contains("FOREIGN KEY"),
+        "DDL should have FK constraints: {ddl}"
+    );
+    let _ = fs::remove_dir_all(&out_dir);
+    Ok(())
+}
+
+#[test]
 fn test_no_ddl_suppresses_ddl_file() -> TestResult {
     let data = std::env::temp_dir().join("gencsv_no_ddl_test.csv");
     let ddl = std::env::temp_dir().join("gencsv_no_ddl_test.ddl.mysql.sql");
