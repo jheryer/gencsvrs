@@ -65,8 +65,8 @@ mod test {
         let subject = parse_schema(input);
 
         assert_eq!(4, subject.len());
-        assert_eq!("col1", subject.get(0).unwrap().name);
-        assert_eq!("STRING", subject.get(0).unwrap().datatype);
+        assert_eq!("col1", subject.first().unwrap().name);
+        assert_eq!("STRING", subject.first().unwrap().datatype);
         assert_eq!("col2", subject.get(1).unwrap().name);
         assert_eq!("INT", subject.get(1).unwrap().datatype);
         assert_eq!("col3", subject.get(2).unwrap().name);

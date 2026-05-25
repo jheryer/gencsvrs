@@ -345,4 +345,84 @@ mod test {
         let series = create_column(element, 4);
         assert_eq!(series.len(), 4);
     }
+
+    #[test]
+    fn test_create_column_int_rng_with_valid_modifier() {
+        let element = Schema {
+            name: "score".to_string(),
+            datatype: "INT_RNG".to_string(),
+            modifier: Some("(10-20)".to_string()),
+        };
+        let series = create_column(element, 5);
+        assert_eq!(series.len(), 5);
+        let vals: Vec<i32> = series.i32().unwrap().into_iter().flatten().collect();
+        assert_eq!(vals[0], 10);
+    }
+
+    #[test]
+    fn test_create_column_all_plain_types_produce_correct_length() {
+        let types = [
+            "STRING", "INT", "INT_INC", "VALUE", "DIGIT", "DECIMAL", "DATE",
+            "TIME", "DATE_TIME", "NAME", "ZIP_CODE", "COUNTRY_CODE", "STATE_NAME",
+            "STATE_ABBR", "LAT", "LON", "PHONE", "PRICE", "LOREM_WORD",
+            "LOREM_TITLE", "LOREM_SENTENCE", "LOREM_PARAGRAPH", "UUID",
+            "FIRST_NAME", "LAST_NAME", "SSN", "UNKNOWN_TYPE_FALLTHROUGH",
+        ];
+        for type_name in &types {
+            let element = Schema {
+                name: format!("col_{type_name}"),
+                datatype: type_name.to_string(),
+                modifier: None,
+            };
+            let series = create_column(element, 3);
+            assert_eq!(series.len(), 3, "type {type_name} produced wrong length");
+        }
+    }
+
+    #[test]
+    fn test_generator_functions_return_nonempty_strings() {
+        assert!(!fake_string().is_empty());
+        assert!(!fake_digit().is_empty());
+        assert!(!fake_date().is_empty());
+        assert!(!fake_time().is_empty());
+        assert!(!fake_date_time().is_empty());
+        assert!(!fake_name().is_empty());
+        assert!(!fake_zipcode().is_empty());
+        assert!(!fake_country_code().is_empty());
+        assert!(!fake_state_name().is_empty());
+        assert!(!fake_state_abbr().is_empty());
+        assert!(!fake_lat().is_empty());
+        assert!(!fake_lon().is_empty());
+        assert!(!fake_phone().is_empty());
+        assert!(!fake_price().is_empty());
+        assert!(!fake_lorem_word().is_empty());
+        assert!(!fake_lorem_title().is_empty());
+        assert!(!fake_lorem_sentence().is_empty());
+        assert!(!fake_lorem_paragraph().is_empty());
+        assert!(!fake_uuid().is_empty());
+        assert!(!fake_first_name().is_empty());
+        assert!(!fake_last_name().is_empty());
+        assert!(!fake_ssn().is_empty());
+        assert_eq!(value_string(), "value");
+        assert_eq!(unknown_string(), "unknown");
+    }
+
+    #[test]
+    fn test_fake_int_is_non_negative() {
+        let v = fake_int();
+        assert!(v >= 0);
+    }
+
+    #[test]
+    fn test_fake_decimal_is_in_range() {
+        let v = fake_decimal();
+        assert!((0.0..100000.0).contains(&v));
+    }
+
+    #[test]
+    fn test_fake_uuid_has_correct_format() {
+        let u = fake_uuid();
+        assert_eq!(u.len(), 36);
+        assert_eq!(u.chars().filter(|&c| c == '-').count(), 4);
+    }
 }

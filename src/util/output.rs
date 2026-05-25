@@ -46,3 +46,50 @@ impl Output for Console {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    fn sample_df() -> DataFrame {
+        let s1 = Series::new("id", vec![0i32, 1, 2]);
+        let s2 = Series::new("val", vec!["a", "b", "c"]);
+        DataFrame::new(vec![s1, s2]).unwrap()
+    }
+
+    #[test]
+    fn test_csv_file_writer_creates_file() {
+        let path = std::env::temp_dir().join("gencsv_test_csv_writer.csv");
+        let mut writer = CSVFile { file_name: path.to_str().unwrap().to_string() };
+        let mut df = sample_df();
+        writer.write(&mut df).unwrap();
+        assert!(path.exists());
+        let content = std::fs::read_to_string(&path).unwrap();
+        assert!(content.contains("id"));
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn test_parquet_file_writer_creates_file() {
+        let path = std::env::temp_dir().join("gencsv_test_parquet_writer.parquet");
+        let mut writer = ParquetFile { file_name: path.to_str().unwrap().to_string() };
+        let mut df = sample_df();
+        writer.write(&mut df).unwrap();
+        assert!(path.exists());
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn test_csv_file_writer_bad_path_returns_error() {
+        let mut writer = CSVFile { file_name: "/nonexistent/dir/out.csv".to_string() };
+        let mut df = sample_df();
+        assert!(writer.write(&mut df).is_err());
+    }
+
+    #[test]
+    fn test_parquet_file_writer_bad_path_returns_error() {
+        let mut writer = ParquetFile { file_name: "/nonexistent/dir/out.parquet".to_string() };
+        let mut df = sample_df();
+        assert!(writer.write(&mut df).is_err());
+    }
+}

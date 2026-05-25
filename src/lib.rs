@@ -80,4 +80,58 @@ mod test {
         let result = run(Some("".to_string()), 3, None, true, false, None, None);
         assert!(result.is_err());
     }
+
+    #[test]
+    fn run_csv_to_file_succeeds() {
+        let path = std::env::temp_dir().join("gencsv_lib_test_csv.csv");
+        let result = run(
+            Some("id:INT_INC,name:VALUE".to_string()),
+            5,
+            Some(path.to_str().unwrap().to_string()),
+            true,
+            false,
+            None,
+            None,
+        );
+        assert!(result.is_ok());
+        assert!(path.exists());
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn run_parquet_to_file_succeeds() {
+        let path = std::env::temp_dir().join("gencsv_lib_test_parquet.parquet");
+        let result = run(
+            Some("id:INT_INC,name:VALUE".to_string()),
+            5,
+            Some(path.to_str().unwrap().to_string()),
+            false,
+            true,
+            None,
+            None,
+        );
+        assert!(result.is_ok());
+        assert!(path.exists());
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[test]
+    fn run_bad_append_target_returns_error() {
+        let result = run(
+            Some("id:INT_INC".to_string()),
+            3,
+            None,
+            true,
+            false,
+            Some("/nonexistent/file.parquet".to_string()),
+            None,
+        );
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn run_default_schema_succeeds() {
+        let result = run(None, 5, None, true, false, None, None);
+        assert!(result.is_ok());
+    }
 }

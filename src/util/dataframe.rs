@@ -218,4 +218,25 @@ mod test {
         let _ = std::fs::remove_file(&path);
         assert!(r.is_err(), "expected Err on malformed parquet, got Ok");
     }
+
+    #[test]
+    fn test_parse_delete_target_random_returns_nonempty_in_range() {
+        let r = parse_delete_target("random", 10).unwrap();
+        assert!(!r.is_empty());
+        for i in &r {
+            assert!(*i >= 0 && *i <= 10, "index {i} out of [0,10]");
+        }
+    }
+
+    #[test]
+    fn test_parse_delete_target_rand_alias_works() {
+        let r = parse_delete_target("rand", 5).unwrap();
+        assert!(!r.is_empty());
+    }
+
+    #[test]
+    fn test_parse_delete_target_inverted_range_returns_error() {
+        let r = parse_delete_target("9-1", 10);
+        assert!(r.is_err());
+    }
 }
