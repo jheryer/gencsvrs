@@ -1,4 +1,4 @@
-# gencsv er — ER Diagram Data Generator
+# synthtab er — ER Diagram Data Generator
 
 Generate relationally-consistent multi-table CSV/Parquet data from a Mermaid
 `erDiagram` source file.
@@ -7,13 +7,13 @@ Generate relationally-consistent multi-table CSV/Parquet data from a Mermaid
 
 ```bash
 # Write 100 rows per entity to ./out/
-gencsv er schema.mmd -r 100 --out ./out
+synthtab er schema.mmd -r 100 --out ./out
 
 # Override per-entity row counts
-gencsv er schema.mmd -r 100 --rows-per ORDER=5000 --rows-per ITEM=25000
+synthtab er schema.mmd -r 100 --rows-per ORDER=5000 --rows-per ITEM=25000
 
 # Parquet output
-gencsv er schema.mmd -r 100 --out ./out -F parquet
+synthtab er schema.mmd -r 100 --out ./out -F parquet
 ```
 
 ## Supported syntax
@@ -42,7 +42,7 @@ ENTITY_NAME {
 
 ### Supported Mermaid types
 
-| Mermaid type | gencsv generator |
+| Mermaid type | synthtab generator |
 |---|---|
 | `int` | `INT_INC` (auto-increment for PK, `INT` otherwise) |
 | `string` | `STRING` |
@@ -124,7 +124,7 @@ erDiagram
 ```
 
 ```bash
-gencsv er shop.mmd -r 500 --rows-per ORDER=2000 --out ./data
+synthtab er shop.mmd -r 500 --rows-per ORDER=2000 --out ./data
 # Writes: data/CUSTOMER.csv  (500 rows)
 #         data/ORDER.csv     (2000 rows, customer_id in CUSTOMER.id)
 ```

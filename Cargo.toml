@@ -1,7 +1,16 @@
 [package]
-name = "gencsv"
-version = "0.1.1"
+name = "synthtab"
+version = "0.2.0"
 edition = "2021"
+description = "Generate realistic fake tabular data with matching DDL and load scripts; ER-mode produces FK-consistent relational datasets from Mermaid erDiagrams."
+license = "MIT"
+repository = "https://github.com/jheryer/synthtab"
+homepage = "https://github.com/jheryer/synthtab"
+readme = "README.md"
+keywords = ["csv", "parquet", "fake-data", "fixtures", "test-data"]
+categories = ["command-line-utilities", "development-tools::testing"]
+authors = ["John Heryer"]
+exclude = ["out/", "target/", "tests/expected/", ".claude/", "docs/", "Cargo.lock"]
 
 [dependencies]
 clap = { version = "4.5.3", features = ["derive"] }

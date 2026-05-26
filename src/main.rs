@@ -45,7 +45,7 @@ struct FlatArgs {
     delete_target: Option<String>,
     /// Emit dialect-correct DDL and load-command files next to the data file
     #[arg(long, value_enum)]
-    target: Option<gencsv::Dialect>,
+    target: Option<synthtab::Dialect>,
     /// Suppress DDL file emission when --target is set
     #[arg(long)]
     no_ddl: bool,
@@ -72,7 +72,7 @@ struct ErArgs {
     format: ErFormat,
     /// Emit dialect-correct DDL and load-command files next to each entity file
     #[arg(long, value_enum)]
-    target: Option<gencsv::Dialect>,
+    target: Option<synthtab::Dialect>,
     /// Suppress DDL file emission when --target is set
     #[arg(long)]
     no_ddl: bool,
@@ -100,20 +100,20 @@ fn parse_rows_per(s: &str) -> Result<(String, usize), String> {
 fn main() {
     let cli = Cli::parse();
     let result = match cli.command {
-        Some(Command::Er(args)) => gencsv::run_er(
+        Some(Command::Er(args)) => synthtab::run_er(
             &args.file,
             args.rows,
             args.rows_per,
             args.out,
             match args.format {
-                ErFormat::Csv => gencsv::ErFormat::Csv,
-                ErFormat::Parquet => gencsv::ErFormat::Parquet,
+                ErFormat::Csv => synthtab::ErFormat::Csv,
+                ErFormat::Parquet => synthtab::ErFormat::Parquet,
             },
             args.target,
             args.no_ddl,
             args.no_load,
         ),
-        None => gencsv::run(
+        None => synthtab::run(
             cli.flat.schema,
             cli.flat.rows,
             cli.flat.file_target,

@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fs;
 type TestResult = Result<(), Box<dyn Error>>;
 
-const NAME: &str = "gencsv";
+const NAME: &str = "synthtab";
 fn run(args: &[&str], expected_file: &str) -> TestResult {
     let expected = fs::read_to_string(expected_file)?;
     Command::cargo_bin(NAME)?

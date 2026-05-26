@@ -2,7 +2,7 @@
 //!
 //! This module exposes:
 //! - `Dialect`: the set of supported target databases
-//! - `to_sql_type`: mapping from a gencsv schema type (uppercase keys matching
+//! - `to_sql_type`: mapping from a synthtab schema type (uppercase keys matching
 //!   `src/util/fake.rs::create_column`) to a dialect-specific SQL column type
 //!   string per PRD §6.2.
 //!
@@ -67,20 +67,20 @@ impl Dialect {
     }
 }
 
-/// Map a gencsv schema type to a SQL column-type string for the given dialect.
+/// Map a synthtab schema type to a SQL column-type string for the given dialect.
 ///
-/// `gencsv_type` must be one of the uppercase keys accepted by
+/// `synthtab_type` must be one of the uppercase keys accepted by
 /// `src/util/fake.rs::create_column` (e.g. `"INT_INC"`, `"STRING"`,
 /// `"DATE_TIME"`). `is_pk` only changes the result for `"INT_INC"`; for every
 /// other type it is accepted but ignored. PK decoration of non-`INT_INC`
 /// columns is deferred to D2 where the DDL emitter has full column context.
 pub fn to_sql_type(
-    gencsv_type: &str,
+    synthtab_type: &str,
     dialect: Dialect,
     is_pk: bool,
 ) -> Result<String, DialectError> {
     use Dialect::*;
-    let mapped: &str = match (gencsv_type, dialect) {
+    let mapped: &str = match (synthtab_type, dialect) {
         // INT_INC: only type whose mapping depends on is_pk
         ("INT_INC", Mysql) if is_pk => "INT AUTO_INCREMENT PRIMARY KEY",
         ("INT_INC", Postgres) if is_pk => "SERIAL PRIMARY KEY",
@@ -231,7 +231,7 @@ mod test {
     #![allow(unused_imports, dead_code)]
     use super::*;
 
-    /// Canonical list of every gencsv type covered by D1, drawn from PRD §6.2.
+    /// Canonical list of every synthtab type covered by D1, drawn from PRD §6.2.
     /// Used by the contract test in `every_type_has_mapping_for_every_dialect`.
     const SUPPORTED_TYPES: &[&str] = &[
         "INT_INC",

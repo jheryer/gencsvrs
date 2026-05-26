@@ -32,7 +32,7 @@ impl From<ErFormat> for SinkFormat {
     }
 }
 
-/// Entry point for the `gencsv er <FILE>` subcommand.
+/// Entry point for the `synthtab er <FILE>` subcommand.
 #[allow(clippy::too_many_arguments)]
 pub fn run_er(
     file: &str,

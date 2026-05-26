@@ -1,6 +1,6 @@
-# Using gencsv
+# Using synthtab
 
-This guide goes deeper than the README. It assumes you already have `gencsv`
+This guide goes deeper than the README. It assumes you already have `synthtab`
 installed (`cargo install --path .` from the repo root).
 
 ## Table of contents
@@ -11,13 +11,13 @@ installed (`cargo install --path .` from the repo root).
 - [Schemas in practice](#schemas-in-practice)
 - [Reproducibility and seeding](#reproducibility-and-seeding)
 - [Error messages you might see](#error-messages-you-might-see)
-- [Extending gencsv](#extending-gencsv)
+- [Extending synthtab](#extending-synthtab)
 
 ---
 
 ## Mental model
 
-A single `gencsv` invocation is one pipeline:
+A single `synthtab` invocation is one pipeline:
 
 ```
 (schema) -> generate rows -> [optional append] -> [optional delete] -> sink
@@ -42,7 +42,7 @@ If you understand that ordering, every CLI option falls into place.
 | Parquet to a file                  | `-p -f data.parquet`                   |
 | Parquet on stdout                  | **Not supported.** Always needs `-f`.  |
 
-`gencsv` will refuse to run with `-p` and no `-f`; this avoids the
+`synthtab` will refuse to run with `-p` and no `-f`; this avoids the
 silent-discard footgun that earlier versions had.
 
 ---
@@ -52,14 +52,14 @@ silent-discard footgun that earlier versions had.
 ### Seed a Postgres table
 
 ```sh
-gencsv -s "id:INT_INC,email:STRING,signup:DATE" -r 5000 -c -f users.csv
+synthtab -s "id:INT_INC,email:STRING,signup:DATE" -r 5000 -c -f users.csv
 psql -c "\copy users(id,email,signup) FROM 'users.csv' WITH (FORMAT csv, HEADER true)"
 ```
 
 ### Build a Parquet fixture for a pyarrow test
 
 ```sh
-gencsv -s "ticker:STATE_ABBR,price:PRICE,ts:DATE_TIME" -r 100000 \
+synthtab -s "ticker:STATE_ABBR,price:PRICE,ts:DATE_TIME" -r 100000 \
        -p -f tests/fixtures/prices.parquet
 ```
 
@@ -68,7 +68,7 @@ gencsv -s "ticker:STATE_ABBR,price:PRICE,ts:DATE_TIME" -r 100000 \
 You have `prices.parquet` from yesterday and want to append today's batch:
 
 ```sh
-gencsv -s "ticker:STATE_ABBR,price:PRICE,ts:DATE_TIME" -r 1000 \
+synthtab -s "ticker:STATE_ABBR,price:PRICE,ts:DATE_TIME" -r 1000 \
        -p -f prices.parquet -a prices.parquet
 ```
 
@@ -80,7 +80,7 @@ surface a clear error if they don't.
 Generate a fixture, then drop every other row out of the first 10:
 
 ```sh
-gencsv -s "id:INT_INC,note:LOREM_WORD" -r 50 \
+synthtab -s "id:INT_INC,note:LOREM_WORD" -r 50 \
        -d "0,2,4,6,8"
 ```
 
@@ -88,7 +88,7 @@ Negative-range deletes start with `-`, so use the `=` form to keep clap from
 treating the leading dash as a short flag:
 
 ```sh
-gencsv -s "id:INT_RNG:(-5-10),note:STRING" -r 16 --delete-target=-2-2
+synthtab -s "id:INT_RNG:(-5-10),note:STRING" -r 16 --delete-target=-2-2
 ```
 
 ---
@@ -114,7 +114,7 @@ bad:INT_RNG              # missing modifier -> warning, falls back to (0-rows)
 bad2:INT_RNG:(garbage)   # malformed modifier -> warning, falls back to (0-rows)
 ```
 
-When `INT_RNG`'s modifier is missing or malformed, `gencsv` writes a warning
+When `INT_RNG`'s modifier is missing or malformed, `synthtab` writes a warning
 to stderr and uses `(0-rows)` so the run still completes. If you want strict
 parsing, grep for `INT_RNG` in stderr and fail your build.
 
@@ -127,7 +127,7 @@ id:INT_INC, , name:NAME
               ^ skipped, warning on stderr
 ```
 
-If **every** column is invalid, `gencsv` exits non-zero with a message
+If **every** column is invalid, `synthtab` exits non-zero with a message
 naming the expected format.
 
 ### Unknown types
@@ -136,7 +136,7 @@ Unknown type names fall through to the literal string `"unknown"`. This makes
 typos easy to spot:
 
 ```sh
-gencsv -s "id:INT_INC,name:NMAE" -r 3
+synthtab -s "id:INT_INC,name:NMAE" -r 3
 # id,name
 # 0,unknown
 # 1,unknown
@@ -147,7 +147,7 @@ gencsv -s "id:INT_INC,name:NMAE" -r 3
 
 ## Reproducibility and seeding
 
-`gencsv` does **not** seed its random number generator. Two runs with the
+`synthtab` does **not** seed its random number generator. Two runs with the
 same flags produce different data for every type except:
 
 - `INT_INC` — always `0..rows`
@@ -155,7 +155,7 @@ same flags produce different data for every type except:
 - The default `VALUE` placeholder (literal `"value"`)
 
 If you need a deterministic fixture, build it once and commit the resulting
-CSV or Parquet file rather than re-running `gencsv` in CI.
+CSV or Parquet file rather than re-running `synthtab` in CI.
 
 ---
 
@@ -173,7 +173,7 @@ CSV or Parquet file rather than re-running `gencsv` in CI.
 
 ---
 
-## Extending gencsv
+## Extending synthtab
 
 If you want to add a new data type:
 

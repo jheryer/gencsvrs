@@ -1,11 +1,11 @@
 //! DDL emitter (D2 + D5 of `.claude/prds/db-target-types.prd.md`).
 //!
-//! D2: flat-table `CREATE TABLE` from a gencsv schema.
+//! D2: flat-table `CREATE TABLE` from a synthtab schema.
 //! D5: ER-mode `CREATE TABLE` with FK constraints, emitted in topological order.
 
 use crate::util::dialect::{to_sql_type, Dialect, DialectError};
 use crate::util::erd_ast::{ErdAst, KeyKind};
-use crate::util::parser::mermaid_type_to_gencsv;
+use crate::util::parser::mermaid_type_to_synthtab;
 use crate::util::schema::Schema;
 
 /// Emit a `CREATE TABLE` DDL string for `table_name` using `columns` and
@@ -80,9 +80,9 @@ pub fn emit_er_ddl(
 
         // Declared columns
         for attr in &entity.attributes {
-            let gencsv_type = mermaid_type_to_gencsv(&attr.data_type).unwrap_or("STRING");
+            let synthtab_type = mermaid_type_to_synthtab(&attr.data_type).unwrap_or("STRING");
             let is_pk = attr.key == Some(KeyKind::Pk);
-            let sql_type = to_sql_type(gencsv_type, dialect, is_pk)?;
+            let sql_type = to_sql_type(synthtab_type, dialect, is_pk)?;
             col_defs.push(format!("  {} {}", attr.name, sql_type));
         }
 

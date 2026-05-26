@@ -1,14 +1,14 @@
-# gencsv
+# synthtab
 
 A small Rust CLI that generates realistic-looking fake tabular data and writes it to **stdout**, **CSV**, or **Parquet** — optionally with matching **`CREATE TABLE` DDL** and a **load-command** script for your target database.
 
 Two modes:
 
 - **Flat mode** — one schema, one table. Great for fixtures, smoke tests, demo data.
-- **ER mode** (`gencsv er`) — generate a whole relational dataset from a [Mermaid `erDiagram`](https://mermaid.js.org/syntax/entityRelationshipDiagram.html) file, with FK values sampled from real parent PKs.
+- **ER mode** (`synthtab er`) — generate a whole relational dataset from a [Mermaid `erDiagram`](https://mermaid.js.org/syntax/entityRelationshipDiagram.html) file, with FK values sampled from real parent PKs.
 
 ```sh
-$ gencsv -s "id:INT_INC,name:NAME,email:STRING,joined:DATE" -r 5
+$ synthtab -s "id:INT_INC,name:NAME,email:STRING,joined:DATE" -r 5
 id,name,email,joined
 0,Mariana Stehr,abc...,2168-09-12
 1,Otho Becker,def...,1789-04-07
@@ -40,17 +40,17 @@ id,name,email,joined
 Requires a recent stable Rust toolchain (`rustup`).
 
 ```sh
-git clone git@github.com:jheryer/gencsvrs.git
-cd gencsvrs
+git clone git@github.com:jheryer/synthtab.git
+cd synthtab
 cargo install --path .
 ```
 
-The binary is **`gencsv`** (single `s`), not `gencsvrs`.
+The binary is **`synthtab`**.
 
 Verify:
 
 ```sh
-gencsv --version
+synthtab --version
 ```
 
 ---
@@ -59,26 +59,26 @@ gencsv --version
 
 ```sh
 # 1. Default schema, 10 rows of literal "value" — useful as a sanity check
-gencsv
+synthtab
 
 # 2. Custom schema, custom row count, CSV to stdout
-gencsv -s "id:INT_INC,name:NAME,phone:PHONE" -r 25
+synthtab -s "id:INT_INC,name:NAME,phone:PHONE" -r 25
 
 # 3. Write 1,000 rows to a CSV file
-gencsv -s "id:INT_INC,city:STATE_NAME" -r 1000 -c -f cities.csv
+synthtab -s "id:INT_INC,city:STATE_NAME" -r 1000 -c -f cities.csv
 
 # 4. Write 1,000 rows to a Parquet file
-gencsv -s "id:INT_INC,price:PRICE" -r 1000 -p -f prices.parquet
+synthtab -s "id:INT_INC,price:PRICE" -r 1000 -p -f prices.parquet
 
 # 5. Generate CSV + a Postgres CREATE TABLE + a \copy snippet in one shot
-gencsv -s "id:INT_INC,email:STRING,joined:DATE" -r 500 \
+synthtab -s "id:INT_INC,email:STRING,joined:DATE" -r 500 \
        -c -f users.csv --target postgres
 # → users.csv
 # → users.ddl.postgres.sql
 # → users.load.postgres.sql
 
 # 6. Generate a whole relational dataset from an ER diagram
-gencsv er shop.mmd -r 500 --rows-per ORDER=2000 --out ./data --target mysql
+synthtab er shop.mmd -r 500 --rows-per ORDER=2000 --out ./data --target mysql
 ```
 
 ---
@@ -89,48 +89,48 @@ gencsv er shop.mmd -r 500 --rows-per ORDER=2000 --out ./data --target mysql
 
 ```sh
 # Count generated rows
-gencsv -s "id:INT_INC" -r 1000000 | wc -l
+synthtab -s "id:INT_INC" -r 1000000 | wc -l
 
 # Load directly into DuckDB
-gencsv -s "id:INT_INC,price:PRICE,ts:DATE_TIME" -r 50000 \
+synthtab -s "id:INT_INC,price:PRICE,ts:DATE_TIME" -r 50000 \
   | duckdb -c "CREATE TABLE events AS SELECT * FROM read_csv_auto('/dev/stdin');"
 
 # Pipe into psql
-gencsv -s "id:INT_INC,email:STRING" -r 10000 \
+synthtab -s "id:INT_INC,email:STRING" -r 10000 \
   | psql -c "\copy users(id,email) FROM STDIN WITH (FORMAT csv, HEADER true)"
 ```
 
 ### A user-signup fixture
 
 ```sh
-gencsv -s "id:INT_INC,first:FIRST_NAME,last:LAST_NAME,email:STRING,signup:DATE_TIME" \
+synthtab -s "id:INT_INC,first:FIRST_NAME,last:LAST_NAME,email:STRING,signup:DATE_TIME" \
        -r 10000 -c -f users.csv
 ```
 
 ### A geo-tagged events Parquet for pyarrow / Spark / Polars tests
 
 ```sh
-gencsv -s "id:UUID,lat:LAT,lon:LON,city:STATE_NAME,observed:DATE_TIME" \
+synthtab -s "id:UUID,lat:LAT,lon:LON,city:STATE_NAME,observed:DATE_TIME" \
        -r 100000 -p -f tests/fixtures/events.parquet
 ```
 
 ### Sequential integers in a range (signed lower bound is fine)
 
 ```sh
-gencsv -s "id:INT_INC,delta:INT_RNG:(-50-50)" -r 100 -c -f range.csv
+synthtab -s "id:INT_INC,delta:INT_RNG:(-50-50)" -r 100 -c -f range.csv
 ```
 
 ### Currency + decimals for a billing fixture
 
 ```sh
-gencsv -s "invoice_id:UUID,amount:PRICE,tax:DECIMAL,paid_on:DATE" \
+synthtab -s "invoice_id:UUID,amount:PRICE,tax:DECIMAL,paid_on:DATE" \
        -r 5000 -c -f invoices.csv
 ```
 
 ### Mixed lorem text for content placeholders
 
 ```sh
-gencsv -s "id:INT_INC,title:LOREM_TITLE,body:LOREM_PARAGRAPH,slug:LOREM_WORD" \
+synthtab -s "id:INT_INC,title:LOREM_TITLE,body:LOREM_PARAGRAPH,slug:LOREM_WORD" \
        -r 250 -c -f posts.csv
 ```
 
@@ -138,7 +138,7 @@ gencsv -s "id:INT_INC,title:LOREM_TITLE,body:LOREM_PARAGRAPH,slug:LOREM_WORD" \
 
 ```sh
 # yesterday's file: prices.parquet (same schema)
-gencsv -s "ticker:STATE_ABBR,price:PRICE,ts:DATE_TIME" -r 1000 \
+synthtab -s "ticker:STATE_ABBR,price:PRICE,ts:DATE_TIME" -r 1000 \
        -p -f prices.parquet -a prices.parquet
 ```
 
@@ -148,26 +148,26 @@ The combined frame (yesterday + today) is written back to `prices.parquet`. Sche
 
 ```sh
 # Drop a single row
-gencsv -s "id:INT_INC,note:LOREM_WORD" -r 50 -d 7
+synthtab -s "id:INT_INC,note:LOREM_WORD" -r 50 -d 7
 
 # Drop rows 0–9
-gencsv -s "id:INT_INC,note:LOREM_WORD" -r 50 -d 0-9
+synthtab -s "id:INT_INC,note:LOREM_WORD" -r 50 -d 0-9
 
 # Drop a comma list
-gencsv -s "id:INT_INC,note:LOREM_WORD" -r 50 -d 0,2,4,6,8
+synthtab -s "id:INT_INC,note:LOREM_WORD" -r 50 -d 0,2,4,6,8
 
 # Drop a random subset (count + indexes both randomized)
-gencsv -s "id:INT_INC,note:LOREM_WORD" -r 50 -d random
+synthtab -s "id:INT_INC,note:LOREM_WORD" -r 50 -d random
 
 # Negative-starting range needs the = form so clap doesn't read the leading - as a flag
-gencsv -s "id:INT_RNG:(-5-10),note:STRING" -r 16 --delete-target=-2-2
+synthtab -s "id:INT_RNG:(-5-10),note:STRING" -r 16 --delete-target=-2-2
 ```
 
 ---
 
 ## ER mode examples
 
-`gencsv er` reads a Mermaid `erDiagram`, writes one file per entity, and **auto-wires FK columns** by sampling from the parent's PK column — so the dataset is referentially consistent out of the box.
+`synthtab er` reads a Mermaid `erDiagram`, writes one file per entity, and **auto-wires FK columns** by sampling from the parent's PK column — so the dataset is referentially consistent out of the box.
 
 ### Minimal: customers + orders
 
@@ -190,7 +190,7 @@ erDiagram
 ```
 
 ```sh
-gencsv er shop.mmd -r 500 --rows-per ORDER=2000 --out ./data
+synthtab er shop.mmd -r 500 --rows-per ORDER=2000 --out ./data
 # → data/CUSTOMER.csv   (500 rows)
 # → data/ORDER.csv      (2 000 rows, customer_id ∈ CUSTOMER.id)
 ```
@@ -198,7 +198,7 @@ gencsv er shop.mmd -r 500 --rows-per ORDER=2000 --out ./data
 ### Parquet output
 
 ```sh
-gencsv er shop.mmd -r 500 --out ./data -F parquet
+synthtab er shop.mmd -r 500 --out ./data -F parquet
 # → data/CUSTOMER.parquet
 # → data/ORDER.parquet
 ```
@@ -215,7 +215,7 @@ erDiagram
 ```
 
 ```sh
-gencsv er enrollments.mmd -r 200 --rows-per STUDENT_COURSE=5000 --out ./data
+synthtab er enrollments.mmd -r 200 --rows-per STUDENT_COURSE=5000 --out ./data
 # → data/STUDENT.csv
 # → data/COURSE.csv
 # → data/STUDENT_COURSE.csv  (junction table with both FKs)
@@ -233,7 +233,7 @@ erDiagram
 ```
 
 ```sh
-gencsv er retail.mmd \
+synthtab er retail.mmd \
        -r 10 \
        --rows-per STORE=200 \
        --rows-per PRODUCT=10000 \
@@ -262,7 +262,7 @@ Add `--target <dialect>` to **flat mode** or **ER mode** and you'll get a matchi
 ### Postgres (flat mode)
 
 ```sh
-gencsv -s "id:INT_INC,name:NAME,email:STRING,joined:DATE" -r 1000 \
+synthtab -s "id:INT_INC,name:NAME,email:STRING,joined:DATE" -r 1000 \
        -c -f users.csv --target postgres
 ```
 
@@ -282,7 +282,7 @@ psql mydb -f users.load.postgres.sql
 ### MySQL (ER mode)
 
 ```sh
-gencsv er shop.mmd -r 500 --out ./data --target mysql
+synthtab er shop.mmd -r 500 --out ./data --target mysql
 # → data/CUSTOMER.csv, data/ORDER.csv
 # → data/schema.ddl.mysql.sql       (CREATE TABLE for all entities + FK constraints)
 # → data/CUSTOMER.load.mysql.sql    (LOAD DATA LOCAL INFILE)
@@ -292,7 +292,7 @@ gencsv er shop.mmd -r 500 --out ./data --target mysql
 ### SQL Server
 
 ```sh
-gencsv -s "id:INT_INC,sku:UUID,price:PRICE" -r 5000 \
+synthtab -s "id:INT_INC,sku:UUID,price:PRICE" -r 5000 \
        -c -f products.csv --target sqlserver
 # → products.ddl.sqlserver.sql  (INT IDENTITY(1,1) PRIMARY KEY, UNIQUEIDENTIFIER, DECIMAL(10,2))
 # → products.load.sqlserver.sql (BULK INSERT)
@@ -301,7 +301,7 @@ gencsv -s "id:INT_INC,sku:UUID,price:PRICE" -r 5000 \
 ### BigQuery
 
 ```sh
-gencsv -s "id:INT_INC,event:STRING,ts:DATE_TIME" -r 50000 \
+synthtab -s "id:INT_INC,event:STRING,ts:DATE_TIME" -r 50000 \
        -p -f events.parquet --target bigquery
 # → events.parquet
 # → events.ddl.bigquery.sql      (INT64, STRING, DATETIME)
@@ -311,7 +311,7 @@ gencsv -s "id:INT_INC,event:STRING,ts:DATE_TIME" -r 50000 \
 ### Spark / Databricks
 
 ```sh
-gencsv er events.mmd -r 1000 --out ./data -F parquet --target spark
+synthtab er events.mmd -r 1000 --out ./data -F parquet --target spark
 # → data/*.parquet
 # → data/schema.ddl.spark.sql
 # → data/<entity>.load.spark.py  (PySpark spark.read snippets)
@@ -320,8 +320,8 @@ gencsv er events.mmd -r 1000 --out ./data -F parquet --target spark
 ### Suppress one or the other
 
 ```sh
-gencsv -s "..." -r 100 -c -f x.csv --target postgres --no-load  # DDL only
-gencsv -s "..." -r 100 -c -f x.csv --target postgres --no-ddl   # load script only
+synthtab -s "..." -r 100 -c -f x.csv --target postgres --no-load  # DDL only
+synthtab -s "..." -r 100 -c -f x.csv --target postgres --no-ddl   # load script only
 ```
 
 Full type-mapping table and Parquet logical-type guidance: [docs/DIALECTS.md](docs/DIALECTS.md).
@@ -331,8 +331,8 @@ Full type-mapping table and Parquet logical-type guidance: [docs/DIALECTS.md](do
 ## CLI reference
 
 ```text
-gencsv [OPTIONS]                # flat mode
-gencsv er <SCHEMA.mmd> [OPTS]   # ER mode
+synthtab [OPTIONS]                # flat mode
+synthtab er <SCHEMA.mmd> [OPTS]   # ER mode
 ```
 
 ### Flat mode flags
@@ -388,7 +388,7 @@ Rules:
 
 - Whitespace around tokens is stripped (`id : INT_INC , name : NAME` works).
 - Columns that don't match `name:TYPE` or `name:TYPE:(mod)` are **skipped with a warning** on stderr; the rest of the schema still runs.
-- If **every** column is invalid, gencsv exits non-zero.
+- If **every** column is invalid, synthtab exits non-zero.
 - Unknown types fall through to the literal string `"unknown"` — typos are obvious.
 
 ---
@@ -454,10 +454,10 @@ Pipeline order is fixed:
 
 ```sh
 # Start with a 5-row baseline file
-gencsv -s "id:INT_INC,note:LOREM_WORD" -r 5 -p -f notes.parquet
+synthtab -s "id:INT_INC,note:LOREM_WORD" -r 5 -p -f notes.parquet
 
 # Append 3 more rows, then drop rows 0 and 7 from the combined 8-row frame
-gencsv -s "id:INT_INC,note:LOREM_WORD" -r 3 \
+synthtab -s "id:INT_INC,note:LOREM_WORD" -r 3 \
        -p -f notes.parquet -a notes.parquet -d 0,7
 ```
 
