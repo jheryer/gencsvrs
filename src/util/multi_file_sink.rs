@@ -64,7 +64,7 @@ mod test {
 
     #[test]
     fn creates_directory_and_writes_csv() {
-        let tmp = std::env::temp_dir().join("gencsv_msink_csv_test");
+        let tmp = std::env::temp_dir().join("synthtab_msink_csv_test");
         let _ = std::fs::remove_dir_all(&tmp);
         let sink = MultiFileSink::new(tmp.clone(), SinkFormat::Csv).unwrap();
         let mut df = sample_df();
@@ -76,7 +76,7 @@ mod test {
 
     #[test]
     fn creates_directory_and_writes_parquet() {
-        let tmp = std::env::temp_dir().join("gencsv_msink_parquet_test");
+        let tmp = std::env::temp_dir().join("synthtab_msink_parquet_test");
         let _ = std::fs::remove_dir_all(&tmp);
         let sink = MultiFileSink::new(tmp.clone(), SinkFormat::Parquet).unwrap();
         let mut df = sample_df();
@@ -88,7 +88,7 @@ mod test {
 
     #[test]
     fn file_path_combines_out_dir_and_entity_name() {
-        let tmp = std::env::temp_dir().join("gencsv_msink_path_test");
+        let tmp = std::env::temp_dir().join("synthtab_msink_path_test");
         let _ = std::fs::remove_dir_all(&tmp);
         let sink = MultiFileSink::new(tmp.clone(), SinkFormat::Csv).unwrap();
         let mut df = sample_df();

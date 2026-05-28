@@ -212,7 +212,7 @@ mod test {
     #[test]
     fn test_data_frame_from_file_invalid_parquet_returns_err() {
         // Write garbage bytes to a temp path and try to read it as parquet.
-        let path = std::env::temp_dir().join("gencsv_bad.parquet");
+        let path = std::env::temp_dir().join("synthtab_bad.parquet");
         std::fs::write(&path, b"not a parquet file").unwrap();
         let r = data_frame_from_file(path.to_str().unwrap());
         let _ = std::fs::remove_file(&path);

@@ -1,13 +1,13 @@
 # Plan: ER-Diagram Generator — M1 (Scanner Port + `er` Subcommand Stub)
 
 **Source PRD**: `.claude/prds/er-diagram-generator.prd.md`
-**Selected Milestone**: M1 — Port and clean scanner from `feature/erdiagram`; add `gencsv er` subcommand stub
+**Selected Milestone**: M1 — Port and clean scanner from `feature/erdiagram`; add `synthtab er` subcommand stub
 **Target branch**: `feature/erd-v2` (fresh from `main`)
 **Complexity**: Medium
 
 ## Summary
 
-Port the salvageable scanner (`src/util/scanner.rs`, 338 lines) from the abandoned `feature/erdiagram` branch into a fresh `feature/erd-v2` branch, hardened to the repo's post-quality-pass standards. Add a `gencsv er <FILE>` clap subcommand that parses CLI args, reads the file, runs the scanner, and prints a token stream (no parser, no generator yet). This milestone produces a working CLI surface and a tested tokenizer ready for M2's parser.
+Port the salvageable scanner (`src/util/scanner.rs`, 338 lines) from the abandoned `feature/erdiagram` branch into a fresh `feature/erd-v2` branch, hardened to the repo's post-quality-pass standards. Add a `synthtab er <FILE>` clap subcommand that parses CLI args, reads the file, runs the scanner, and prints a token stream (no parser, no generator yet). This milestone produces a working CLI surface and a tested tokenizer ready for M2's parser.
 
 ## Patterns to Mirror
 
@@ -27,8 +27,8 @@ Port the salvageable scanner (`src/util/scanner.rs`, 338 lines) from the abandon
 - Salvage **only** `src/util/scanner.rs` from `feature/erdiagram`. The branch's other files regressed code quality and must be ignored.
 - Promote scanner to current quality bar: no `unwrap()` outside tests/unreachable paths, `OnceLock`-cached regexes, line-numbered error messages, immutable-by-default style.
 - Token model must distinguish at minimum: `Keyword(erDiagram)`, `Ident(String)`, `LBrace`, `RBrace`, `Colon`, `Cardinality(String)` (raw glyph, e.g. `||--o{`), `Newline`, `Comment(String)`. Final shape gets cemented when the parser arrives in M2; M1 only needs a stable enough emission to round-trip the §6 examples from the PRD.
-- Add `gencsv er <FILE> [--rows N] [--rows-per K=V]... [--out DIR] [--format csv|parquet]` clap subcommand. Flags must parse correctly but be **stored unused** in M1 (parser/generator land in M2/M3). The only required runtime behaviour: open `<FILE>`, run scanner, print token-per-line debug dump to stdout, exit 0 on clean scan and non-zero with a line-numbered error otherwise.
-- Existing flag-based mode (`gencsv -s …`) must continue to work unchanged. Adding a subcommand is a breaking change to clap structure unless we use a default-subcommand pattern — see "Risks" below for the chosen approach.
+- Add `synthtab er <FILE> [--rows N] [--rows-per K=V]... [--out DIR] [--format csv|parquet]` clap subcommand. Flags must parse correctly but be **stored unused** in M1 (parser/generator land in M2/M3). The only required runtime behaviour: open `<FILE>`, run scanner, print token-per-line debug dump to stdout, exit 0 on clean scan and non-zero with a line-numbered error otherwise.
+- Existing flag-based mode (`synthtab -s …`) must continue to work unchanged. Adding a subcommand is a breaking change to clap structure unless we use a default-subcommand pattern — see "Risks" below for the chosen approach.
 - Two integration test fixtures: one valid `.mmd` file, one with an unsupported glyph that asserts a line-numbered error.
 
 ## Files to Change
@@ -83,7 +83,7 @@ Port the salvageable scanner (`src/util/scanner.rs`, 338 lines) from the abandon
       Er(ErArgs),
   }
   ```
-  Dispatch: `Some(Er(a)) => gencsv::run_er(...)`, `None => gencsv::run(...)` (existing behaviour preserved).
+  Dispatch: `Some(Er(a)) => synthtab::run_er(...)`, `None => synthtab::run(...)` (existing behaviour preserved).
 - **Mirror**: `src/main.rs:5-29` for short+long flag style on `ErArgs`; defaults via `default_value_t`.
 - **Validate**: `cargo build --release` succeeds. `cargo run -- --help` shows both flat-table flags and the `er` subcommand. `cargo run -- -s "a:INT" -r 3` still works (regression check).
 
@@ -133,7 +133,7 @@ Coverage (`cargo llvm-cov --fail-under-lines 80`) is listed as an M5 acceptance 
 
 | Risk | Likelihood | Mitigation |
 |---|---|---|
-| Clap subcommand refactor breaks existing flag-based mode | **High** | Use `Option<Subcommand>` + `#[command(flatten)] FlatArgs` so `gencsv -s ... -r 3` still parses with no subcommand. Add a regression integration test before refactor. |
+| Clap subcommand refactor breaks existing flag-based mode | **High** | Use `Option<Subcommand>` + `#[command(flatten)] FlatArgs` so `synthtab -s ... -r 3` still parses with no subcommand. Add a regression integration test before refactor. |
 | Salvaged scanner has hidden `unwrap()` panics on malformed input | Medium | Task 2 writes failing tests for malformed input first; Task 3 cannot pass without `?`-propagation throughout. |
 | Token enum design choices in M1 prove wrong for M2 parser | Medium | Keep `Token` `pub(crate)`, not `pub`, so M2 can refactor freely. Scope M1 to round-tripping the PRD §6 examples; resist designing for the parser. |
 | Scanner port pulls in a new crate not on the CLAUDE.md pin list | Low | Audit `feature/erdiagram` scanner imports before porting; reject any new dep unless justified in a separate PR. Current code already has `regex` + `std`. |
@@ -144,9 +144,9 @@ Coverage (`cargo llvm-cov --fail-under-lines 80`) is listed as an M5 acceptance 
 
 - [ ] `feature/erd-v2` branch cut fresh from `main`
 - [ ] `src/util/scanner.rs` exists with `pub enum Token`, `pub fn scan`, inline tests, no `unwrap()` outside tests
-- [ ] `gencsv er <FILE>` parses and dumps tokens line-by-line
-- [ ] `gencsv -s "..." -r N` continues to work unchanged (regression-tested)
-- [ ] `gencsv er tests/fixtures/er/invalid_glyph.mmd` exits non-zero with `line N: non-identifying relationships ('..') not supported; use '--'`
+- [ ] `synthtab er <FILE>` parses and dumps tokens line-by-line
+- [ ] `synthtab -s "..." -r N` continues to work unchanged (regression-tested)
+- [ ] `synthtab er tests/fixtures/er/invalid_glyph.mmd` exits non-zero with `line N: non-identifying relationships ('..') not supported; use '--'`
 - [ ] `cargo fmt --all -- --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test` all green
 - [ ] No new crate added to `Cargo.toml` (scanner uses only existing deps)
 - [ ] M1 row in PRD §8 marked `in-progress` with link to this plan

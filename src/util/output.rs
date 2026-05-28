@@ -59,7 +59,7 @@ mod test {
 
     #[test]
     fn test_csv_file_writer_creates_file() {
-        let path = std::env::temp_dir().join("gencsv_test_csv_writer.csv");
+        let path = std::env::temp_dir().join("synthtab_test_csv_writer.csv");
         let mut writer = CSVFile {
             file_name: path.to_str().unwrap().to_string(),
         };
@@ -73,7 +73,7 @@ mod test {
 
     #[test]
     fn test_parquet_file_writer_creates_file() {
-        let path = std::env::temp_dir().join("gencsv_test_parquet_writer.parquet");
+        let path = std::env::temp_dir().join("synthtab_test_parquet_writer.parquet");
         let mut writer = ParquetFile {
             file_name: path.to_str().unwrap().to_string(),
         };

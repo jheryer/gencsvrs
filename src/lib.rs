@@ -265,7 +265,7 @@ mod test {
 
     #[test]
     fn run_csv_to_file_succeeds() {
-        let path = std::env::temp_dir().join("gencsv_lib_test_csv.csv");
+        let path = std::env::temp_dir().join("synthtab_lib_test_csv.csv");
         let result = run9(
             Some("id:INT_INC,name:VALUE".to_string()),
             5,
@@ -284,7 +284,7 @@ mod test {
 
     #[test]
     fn run_parquet_to_file_succeeds() {
-        let path = std::env::temp_dir().join("gencsv_lib_test_parquet.parquet");
+        let path = std::env::temp_dir().join("synthtab_lib_test_parquet.parquet");
         let result = run9(
             Some("id:INT_INC,name:VALUE".to_string()),
             5,
@@ -352,9 +352,9 @@ erDiagram
   CHILD { int id PK }
   PARENT ||--o{ CHILD : has
 ";
-        let dir = std::env::temp_dir().join("gencsv_run_er_test_basic");
+        let dir = std::env::temp_dir().join("synthtab_run_er_test_basic");
         let _ = std::fs::remove_dir_all(&dir);
-        let mmd = std::env::temp_dir().join("gencsv_run_er_test_basic.mmd");
+        let mmd = std::env::temp_dir().join("synthtab_run_er_test_basic.mmd");
         std::fs::write(&mmd, src).unwrap();
         let r = run_er(
             mmd.to_str().unwrap(),
@@ -381,9 +381,9 @@ erDiagram
   COURSE { int id PK }
   STUDENT }o--o{ COURSE : enrolled
 ";
-        let dir = std::env::temp_dir().join("gencsv_run_er_test_mn");
+        let dir = std::env::temp_dir().join("synthtab_run_er_test_mn");
         let _ = std::fs::remove_dir_all(&dir);
-        let mmd = std::env::temp_dir().join("gencsv_run_er_test_mn.mmd");
+        let mmd = std::env::temp_dir().join("synthtab_run_er_test_mn.mmd");
         std::fs::write(&mmd, src).unwrap();
         let r = run_er(
             mmd.to_str().unwrap(),
@@ -411,9 +411,9 @@ erDiagram
   ORDER { int id PK }
   CUSTOMER ||--o{ ORDER : places
 ";
-        let dir = std::env::temp_dir().join("gencsv_run_er_ddl_test");
+        let dir = std::env::temp_dir().join("synthtab_run_er_ddl_test");
         let _ = std::fs::remove_dir_all(&dir);
-        let mmd = std::env::temp_dir().join("gencsv_run_er_ddl_test.mmd");
+        let mmd = std::env::temp_dir().join("synthtab_run_er_ddl_test.mmd");
         std::fs::write(&mmd, src).unwrap();
         let r = run_er(
             mmd.to_str().unwrap(),
