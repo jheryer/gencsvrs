@@ -4,8 +4,8 @@ Project-specific notes for working in this repo. General Rust/coding rules live 
 
 ## Identity
 
-- Repo dir: `gencsvrs`. Cargo crate + binary: **`gencsv`** (single `s`). `cargo install --path .` produces `gencsv`, not `gencsvrs`. README install snippet reflects this.
-- Single-binary CLI; library entry point is `gencsv::run(...)` in `src/lib.rs`.
+- Repo dir: `synthtab` (formerly `gencsvrs`). Cargo crate + binary: **`synthtab`**. `cargo install --path .` produces `synthtab`. Historical note: the binary was `gencsv` before v0.2.0.
+- Single-binary CLI; library entry point is `synthtab::run(...)` in `src/lib.rs`.
 
 ## Tech stack pins (do not bump casually)
 

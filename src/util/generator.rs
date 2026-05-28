@@ -11,7 +11,7 @@
 
 use crate::util::erd_ast::{Cardinality, Entity, ErdAst, Relationship};
 use crate::util::fake::create_column;
-use crate::util::parser::mermaid_type_to_gencsv;
+use crate::util::parser::mermaid_type_to_synthtab;
 use crate::util::schema::Schema;
 use polars::prelude::*;
 use rand::seq::SliceRandom;
@@ -186,7 +186,7 @@ fn build_entity_frame(
             continue;
         }
 
-        let gencsv_type = mermaid_type_to_gencsv(&attr.data_type).ok_or_else(|| GenError {
+        let synthtab_type = mermaid_type_to_synthtab(&attr.data_type).ok_or_else(|| GenError {
             message: format!(
                 "entity '{}': attribute '{}' has unknown type '{}' (parser should have caught this)",
                 entity.name, attr.name, attr.data_type
@@ -195,7 +195,7 @@ fn build_entity_frame(
 
         let schema = Schema {
             name: attr.name.clone(),
-            datatype: gencsv_type.to_string(),
+            datatype: synthtab_type.to_string(),
             modifier: None,
         };
         let col = create_column(schema, n);

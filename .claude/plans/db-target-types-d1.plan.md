@@ -7,7 +7,7 @@
 
 ## Summary
 
-Land the foundational `Dialect` enum and the full `gencsv-type × dialect → SQL-type-string` mapping table from PRD §6.2 as a pure-library module with no I/O, no CLI changes, no `Output` sink. This milestone is a lookup table behind a small API; everything else (DDL emission, load commands, Parquet logical types, ER integration) is layered on top of it in D2–D5. Choosing to land this independently of the ER work is deliberate — D1 has zero behavioural overlap with ER and no shared files, so it can ship in parallel.
+Land the foundational `Dialect` enum and the full `synthtab-type × dialect → SQL-type-string` mapping table from PRD §6.2 as a pure-library module with no I/O, no CLI changes, no `Output` sink. This milestone is a lookup table behind a small API; everything else (DDL emission, load commands, Parquet logical types, ER integration) is layered on top of it in D2–D5. Choosing to land this independently of the ER work is deliberate — D1 has zero behavioural overlap with ER and no shared files, so it can ship in parallel.
 
 ## Patterns to Mirror
 
@@ -34,12 +34,12 @@ impl Dialect {
 
 pub struct DialectError { pub message: String }   // Display + Error
 
-pub fn to_sql_type(gencsv_type: &str, dialect: Dialect, is_pk: bool) -> Result<String, DialectError>;
+pub fn to_sql_type(synthtab_type: &str, dialect: Dialect, is_pk: bool) -> Result<String, DialectError>;
 ```
 
 All 24 rows in PRD §6.2 must be covered. `is_pk` only changes the output for `INT_INC` (per the PRD table: PK gets `INT AUTO_INCREMENT PRIMARY KEY` / `SERIAL PRIMARY KEY` / etc., non-PK gets `INT NOT NULL` / `INTEGER NOT NULL` / etc.). For all other types, `is_pk` is accepted but ignored — we don't decorate non-`INT_INC` PKs in D1.
 
-Unknown `gencsv_type` returns `Err(DialectError { message: "type 'foo' has no '{dialect}' mapping; supported mappings: see docs/DIALECTS.md" })` per PRD §7. The `docs/DIALECTS.md` reference is forward-looking — file lands in D6, but the error string must be present from D1 so we don't need to update it later.
+Unknown `synthtab_type` returns `Err(DialectError { message: "type 'foo' has no '{dialect}' mapping; supported mappings: see docs/DIALECTS.md" })` per PRD §7. The `docs/DIALECTS.md` reference is forward-looking — file lands in D6, but the error string must be present from D1 so we don't need to update it later.
 
 **Explicitly NOT in D1**: no `Output` trait impl, no file emission, no CLI flag, no DDL string assembly (`CREATE TABLE ...`), no load-command rendering, no Parquet logical-type wiring, no schema.rs changes. Those are D2–D5.
 
@@ -87,8 +87,8 @@ No changes to `src/main.rs`, `src/lib.rs`, `src/util/schema.rs`, `src/util/fake.
 
 - Implementation shape:
   ```rust
-  pub fn to_sql_type(gencsv_type: &str, dialect: Dialect, is_pk: bool) -> Result<String, DialectError> {
-      let mapped = match (dialect, gencsv_type) {
+  pub fn to_sql_type(synthtab_type: &str, dialect: Dialect, is_pk: bool) -> Result<String, DialectError> {
+      let mapped = match (dialect, synthtab_type) {
           (Dialect::Mysql,    "INT_INC") if is_pk => "INT AUTO_INCREMENT PRIMARY KEY",
           (Dialect::Mysql,    "INT_INC")           => "INT NOT NULL",
           (Dialect::Postgres, "INT_INC") if is_pk => "SERIAL PRIMARY KEY",
@@ -114,7 +114,7 @@ No changes to `src/main.rs`, `src/lib.rs`, `src/util/schema.rs`, `src/util/fake.
 - **Validate**: `cargo test dialect` — all green.
 
 ### Task 5: Quality gates + commit
-- **Action**: Run the full pre-commit suite. Conventional commit: `feat: add Dialect enum and gencsv-type -> SQL-type mapping (D1)`.
+- **Action**: Run the full pre-commit suite. Conventional commit: `feat: add Dialect enum and synthtab-type -> SQL-type mapping (D1)`.
 - **Validate**: see Validation block below.
 
 ## Validation
@@ -143,7 +143,7 @@ Coverage gate (`cargo llvm-cov --fail-under-lines 80`) is a D6 acceptance criter
 | Risk | Likelihood | Mitigation |
 |---|---|---|
 | Mapping table row drift between PRD §6.2 and `to_sql_type` implementation | **High** | Single source of truth in `dialect.rs`. When D6 ships `docs/DIALECTS.md`, the doc gets generated from a table-driven test or a const slice — not maintained by hand. For D1, the `every_type_in_readme_has_at_least_one_dialect_mapping` test guarantees coverage. |
-| Type-string mismatch between `gencsv` schema and `to_sql_type` keys (e.g. `"INT"` vs `"int"`) | High | `create_column` in `src/util/fake.rs:60` matches uppercase. `to_sql_type` must take the same uppercase key. Add a doc comment on `to_sql_type` pinning this contract: `/// `gencsv_type` must be one of the uppercase keys accepted by `create_column`.` |
+| Type-string mismatch between `synthtab` schema and `to_sql_type` keys (e.g. `"INT"` vs `"int"`) | High | `create_column` in `src/util/fake.rs:60` matches uppercase. `to_sql_type` must take the same uppercase key. Add a doc comment on `to_sql_type` pinning this contract: `/// `synthtab_type` must be one of the uppercase keys accepted by `create_column`.` |
 | `clap::ValueEnum` derive adds a build dependency we didn't intend | Low | Clap derive is already on per CLAUDE.md (`clap = "4.5 derive"`). No new crate. |
 | `Dialect::from_str` collides with `std::str::FromStr` trait impl readers might expect | Low | Implement as inherent method `from_str(s: &str) -> Result<Self, DialectError>` rather than the `FromStr` trait — keeps error type local, avoids `std::str::FromStr::Err` boilerplate. Document in the method's doc-comment. |
 | Future DDL emitter (D2) needs more context than `(type, dialect, is_pk)` (e.g. nullability, FK target, length override) | Medium | D1 keeps the signature minimal. D2 will likely wrap `to_sql_type` rather than change it — pass a `ColumnSpec` struct in D2 if needed. Don't pre-design that struct in D1. |

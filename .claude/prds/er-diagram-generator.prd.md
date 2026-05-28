@@ -10,7 +10,7 @@
 
 ## 1. Problem
 
-`gencsv` today produces a single flat table from a `-s "col:TYPE,…"` schema. Real-world test fixtures need **multiple related tables** where foreign keys actually reference existing primary keys. Hand-wiring this with the current flag-based schema is impossible, and post-generation joining of independent flat CSVs produces broken referential integrity.
+`synthtab` today produces a single flat table from a `-s "col:TYPE,…"` schema. Real-world test fixtures need **multiple related tables** where foreign keys actually reference existing primary keys. Hand-wiring this with the current flag-based schema is impossible, and post-generation joining of independent flat CSVs produces broken referential integrity.
 
 ## 2. Goal
 
@@ -41,14 +41,14 @@ Generate **relationally-consistent multi-table synthetic data** from a **Mermaid
 New subcommand:
 
 ```
-gencsv er <FILE>
+synthtab er <FILE>
     [--rows N]                          # default row count per entity (default: 10)
     [--rows-per ENTITY=N]...            # repeatable per-entity overrides
     [--out DIR]                         # output directory (default: ./out)
     [--format csv|parquet]              # default: csv
 ```
 
-Existing flag-based mode (`gencsv -s …`) stays unchanged and becomes a peer of the `er` subcommand.
+Existing flag-based mode (`synthtab -s …`) stays unchanged and becomes a peer of the `er` subcommand.
 
 ### 5.2 Pipeline
 
@@ -95,7 +95,7 @@ This is the **complete supported grammar**. Anything outside this table is rejec
 
 ### 6.3 Attribute types
 
-| Mermaid type | gencsv generator | Notes |
+| Mermaid type | synthtab generator | Notes |
 |---|---|---|
 | `int`, `integer`, `bigint` | `INT_INC` | Sequential for PKs |
 | `string`, `varchar`, `text` | `STRING` | |
@@ -164,7 +164,7 @@ All errors include the source file path and 1-based line number where applicable
 
 | # | Milestone | Plan | Status |
 |---|---|---|---|
-| M1 | Port and clean scanner from `feature/erdiagram`; add `gencsv er` subcommand stub | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | done |
+| M1 | Port and clean scanner from `feature/erdiagram`; add `synthtab er` subcommand stub | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | done |
 | M2 | Parser + `ErdAst` model + validation pass (PK count, undeclared refs) | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | done |
 | M3 | Topological generator + 1:1, 1:N, N:1 FK wiring + `MultiFileSink` | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | done |
 | M4 | Many-to-many junction table emission | [.claude/plans/er-diagram-generator-m1.plan.md](../plans/er-diagram-generator-m1.plan.md) | done |
@@ -176,7 +176,7 @@ Each milestone follows the TDD workflow (test-first, RED→GREEN→refactor) and
 
 ## 9. Acceptance Criteria
 
-- [ ] `gencsv er tests/fixtures/car_person.mmd --out /tmp/out` writes `CAR.csv`, `PERSON.csv`, `NAMED-DRIVER.csv`
+- [ ] `synthtab er tests/fixtures/car_person.mmd --out /tmp/out` writes `CAR.csv`, `PERSON.csv`, `NAMED-DRIVER.csv`
 - [ ] Every `NAMED-DRIVER.car_id` exists in `CAR.id`; every `NAMED-DRIVER.person_id` exists in `PERSON.id` (integration test asserts this)
 - [ ] M:N fixture produces a junction file with no duplicate `(a_id, b_id)` pairs
 - [ ] All errors in §7 are reproducible via fixture files and produce the documented messages
@@ -209,6 +209,6 @@ Each milestone follows the TDD workflow (test-first, RED→GREEN→refactor) and
 ## 12. References
 
 - Mermaid ER spec: https://mermaid.js.org/syntax/entityRelationshipDiagram.html
-- Current `gencsv` README: `/README.md`
+- Current `synthtab` README: `/README.md`
 - Current architecture notes: `/CLAUDE.md`
 - Abandoned exploration: `feature/erdiagram` (scanner.rs is salvageable, rest is not)

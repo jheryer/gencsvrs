@@ -27,11 +27,11 @@ impl fmt::Display for ParseError {
 
 impl Error for ParseError {}
 
-/// Mermaid attribute types accepted by the parser. Maps to the gencsv generator
+/// Mermaid attribute types accepted by the parser. Maps to the synthtab generator
 /// type used at row-generation time (see PRD §6.3). Mermaid `bool`/`boolean`
 /// is intentionally absent: it is detected and rejected with a specific
 /// "not yet supported" message per PRD §7.
-pub(crate) fn mermaid_type_to_gencsv(mermaid: &str) -> Option<&'static str> {
+pub(crate) fn mermaid_type_to_synthtab(mermaid: &str) -> Option<&'static str> {
     let base = mermaid
         .split_once('(')
         .map(|(b, _)| b)
@@ -291,7 +291,7 @@ impl Parser {
                         });
                     }
 
-                    if mermaid_type_to_gencsv(&ty).is_none() {
+                    if mermaid_type_to_synthtab(&ty).is_none() {
                         return Err(ParseError {
                             message: format!(
                                 "line {line}: unknown type '{ty}'; supported types: int, string, uuid, date, datetime, decimal, time (see docs/ERD.md §Types)"

@@ -4,7 +4,7 @@ use std::error::Error;
 use std::fs;
 type TestResult = Result<(), Box<dyn Error>>;
 
-const NAME: &str = "gencsv";
+const NAME: &str = "synthtab";
 fn run(args: &[&str], expected_file: &str) -> TestResult {
     let expected = fs::read_to_string(expected_file)?;
     Command::cargo_bin(NAME)?
@@ -98,7 +98,7 @@ fn test_er_subcommand_listed_in_help() -> TestResult {
 
 #[test]
 fn test_er_generates_csv_files_for_valid_fixture() -> TestResult {
-    let out_dir = std::env::temp_dir().join("gencsv_cli_er_fixture_test");
+    let out_dir = std::env::temp_dir().join("synthtab_cli_er_fixture_test");
     let _ = fs::remove_dir_all(&out_dir);
     Command::cargo_bin(NAME)?
         .args([
@@ -120,7 +120,7 @@ fn test_er_generates_csv_files_for_valid_fixture() -> TestResult {
 
 #[test]
 fn test_er_generates_junction_for_many_to_many() -> TestResult {
-    let out_dir = std::env::temp_dir().join("gencsv_cli_er_mn_test");
+    let out_dir = std::env::temp_dir().join("synthtab_cli_er_mn_test");
     let _ = fs::remove_dir_all(&out_dir);
     Command::cargo_bin(NAME)?
         .args([
@@ -179,8 +179,8 @@ fn test_flat_mode_still_works_after_subcommand_refactor() -> TestResult {
 
 #[test]
 fn test_target_postgres_writes_ddl_file() -> TestResult {
-    let data = std::env::temp_dir().join("gencsv_ddl_test_users.csv");
-    let ddl = std::env::temp_dir().join("gencsv_ddl_test_users.ddl.postgres.sql");
+    let data = std::env::temp_dir().join("synthtab_ddl_test_users.csv");
+    let ddl = std::env::temp_dir().join("synthtab_ddl_test_users.ddl.postgres.sql");
     let _ = fs::remove_file(&data);
     let _ = fs::remove_file(&ddl);
     Command::cargo_bin(NAME)?
@@ -220,8 +220,8 @@ fn test_target_without_file_target_is_rejected() -> TestResult {
 
 #[test]
 fn test_target_postgres_writes_load_file() -> TestResult {
-    let data = std::env::temp_dir().join("gencsv_load_test_users.csv");
-    let load = std::env::temp_dir().join("gencsv_load_test_users.load.postgres.sql");
+    let data = std::env::temp_dir().join("synthtab_load_test_users.csv");
+    let load = std::env::temp_dir().join("synthtab_load_test_users.load.postgres.sql");
     let _ = fs::remove_file(&data);
     let _ = fs::remove_file(&load);
     Command::cargo_bin(NAME)?
@@ -252,8 +252,8 @@ fn test_target_postgres_writes_load_file() -> TestResult {
 
 #[test]
 fn test_no_load_suppresses_load_file() -> TestResult {
-    let data = std::env::temp_dir().join("gencsv_no_load_test.csv");
-    let load = std::env::temp_dir().join("gencsv_no_load_test.load.mysql.sql");
+    let data = std::env::temp_dir().join("synthtab_no_load_test.csv");
+    let load = std::env::temp_dir().join("synthtab_no_load_test.load.mysql.sql");
     let _ = fs::remove_file(&data);
     let _ = fs::remove_file(&load);
     Command::cargo_bin(NAME)?
@@ -278,7 +278,7 @@ fn test_no_load_suppresses_load_file() -> TestResult {
 
 #[test]
 fn test_er_target_postgres_writes_ddl_and_load() -> TestResult {
-    let out_dir = std::env::temp_dir().join("gencsv_cli_er_target_test");
+    let out_dir = std::env::temp_dir().join("synthtab_cli_er_target_test");
     let _ = fs::remove_dir_all(&out_dir);
     Command::cargo_bin(NAME)?
         .args([
@@ -312,8 +312,8 @@ fn test_er_target_postgres_writes_ddl_and_load() -> TestResult {
 
 #[test]
 fn test_no_ddl_suppresses_ddl_file() -> TestResult {
-    let data = std::env::temp_dir().join("gencsv_no_ddl_test.csv");
-    let ddl = std::env::temp_dir().join("gencsv_no_ddl_test.ddl.mysql.sql");
+    let data = std::env::temp_dir().join("synthtab_no_ddl_test.csv");
+    let ddl = std::env::temp_dir().join("synthtab_no_ddl_test.ddl.mysql.sql");
     let _ = fs::remove_file(&data);
     let _ = fs::remove_file(&ddl);
     Command::cargo_bin(NAME)?
