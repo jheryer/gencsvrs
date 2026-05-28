@@ -10,7 +10,7 @@
 
 ## 1. Problem
 
-`gencsv` produces CSV (typeless) and Parquet (typed, but generically). Users importing into MySQL, Postgres, SQL Server, BigQuery, or Spark have to:
+`synthtab` produces CSV (typeless) and Parquet (typed, but generically). Users importing into MySQL, Postgres, SQL Server, BigQuery, or Spark have to:
 
 1. Hand-write a `CREATE TABLE` matching the generated columns
 2. Remember the right `LOAD DATA` / `\copy` / `BULK INSERT` / `bq load` / Spark DataFrame incantation
@@ -20,12 +20,12 @@ This friction defeats the "generate fixture data fast" promise of the tool.
 
 ## 2. Goal
 
-When the user passes `--target <dialect>`, `gencsv` emits everything needed to land the data in that database:
+When the user passes `--target <dialect>`, `synthtab` emits everything needed to land the data in that database:
 
 1. Dialect-correct **Parquet logical types** (when output format is parquet)
 2. A **`CREATE TABLE` DDL file** matching the generated columns
 3. An **example load command** for the target dialect
-4. All of the above composing cleanly with both flat-table mode (`gencsv -s …`) and ER mode (`gencsv er …`)
+4. All of the above composing cleanly with both flat-table mode (`synthtab -s …`) and ER mode (`synthtab er …`)
 
 ## 3. Non-Goals
 
@@ -40,7 +40,7 @@ When the user passes `--target <dialect>`, `gencsv` emits everything needed to l
 
 | As a… | I want to… | So that… |
 |---|---|---|
-| Backend engineer | Run `gencsv -s "id:INT_INC,email:STRING" -r 5000 -c -f users.csv --target postgres` and get `users.csv` + `users.ddl.postgres.sql` + `users.load.postgres.sql` | I can `psql -f users.ddl.postgres.sql && psql -f users.load.postgres.sql` and be done |
+| Backend engineer | Run `synthtab -s "id:INT_INC,email:STRING" -r 5000 -c -f users.csv --target postgres` and get `users.csv` + `users.ddl.postgres.sql` + `users.load.postgres.sql` | I can `psql -f users.ddl.postgres.sql && psql -f users.load.postgres.sql` and be done |
 | Data engineer | Pipe an ER diagram + `--target bigquery` and get one Parquet per entity plus dialect-correct DDL | I can `bq load --source_format=PARQUET` each table directly |
 | QA engineer | See FK constraints in the emitted DDL for ER-mode output | Loading the data exercises the same referential integrity my production schema does |
 | Anyone | See a clear error if I ask for a target/type combo we don't support | I'm not chasing silent type coercions at load time |
@@ -52,14 +52,14 @@ When the user passes `--target <dialect>`, `gencsv` emits everything needed to l
 Existing commands grow three new flags:
 
 ```
-gencsv [existing flags...]
+synthtab [existing flags...]
     [--target mysql|postgres|sqlserver|bigquery|spark]
     [--no-ddl]                  # suppress DDL emission when --target is set
     [--no-load]                 # suppress load-command emission when --target is set
     [--no-data]                 # emit only DDL + load command, skip data files (handy for inspection)
 ```
 
-Same flags work on `gencsv er <FILE> --target postgres --out DIR`.
+Same flags work on `synthtab er <FILE> --target postgres --out DIR`.
 
 ### 5.2 Output bundle (one entity, target = `postgres`)
 
@@ -113,7 +113,7 @@ Caveats per dialect documented in `docs/DIALECTS.md`.
 
 ### 6.2 Type mapping table (canonical reference)
 
-| gencsv type | MySQL | Postgres | SQL Server | BigQuery | Spark |
+| synthtab type | MySQL | Postgres | SQL Server | BigQuery | Spark |
 |---|---|---|---|---|---|
 | `INT_INC` (PK) | `INT AUTO_INCREMENT PRIMARY KEY` | `SERIAL PRIMARY KEY` | `INT IDENTITY(1,1) PRIMARY KEY` | `INT64` + comment "// auto-increment not native" | `INT` + comment "// auto-increment not native" |
 | `INT_INC` (non-PK) | `INT NOT NULL` | `INTEGER NOT NULL` | `INT NOT NULL` | `INT64` | `INT` |
@@ -187,7 +187,7 @@ All errors exit non-zero and produce no partial output.
                           └────────────┬─────────────────────┘
                                        v
 ┌────────────────┐    ┌────────────────────────────────┐
-│ Schema parser  │ -> │ TypeResolver (gencsv types)    │
+│ Schema parser  │ -> │ TypeResolver (synthtab types)    │
 └────────────────┘    └────────────────┬───────────────┘
                                        │
                           ┌────────────┴────────────┐
@@ -214,7 +214,7 @@ All errors exit non-zero and produce no partial output.
 
 | File | Action | Why |
 |---|---|---|
-| `src/util/dialect.rs` | CREATE | `Dialect` enum + `to_sql_type(gencsv_type, is_pk) -> &str` per dialect; load template lookup |
+| `src/util/dialect.rs` | CREATE | `Dialect` enum + `to_sql_type(synthtab_type, is_pk) -> &str` per dialect; load template lookup |
 | `src/util/ddl.rs` | CREATE | `emit_create_table(table_name, columns, dialect) -> String`; FK constraint support |
 | `src/util/load_cmd.rs` | CREATE | Template renderer per dialect; choose file extension |
 | `src/util/output.rs` | UPDATE | Add `DdlFile`, `LoadCmdFile` sinks; teach `ParquetFile::new_for_dialect` |
@@ -255,7 +255,7 @@ Each milestone follows the TDD workflow (test-first, RED→GREEN→refactor) and
 
 ## 10. Acceptance Criteria
 
-- [ ] `gencsv -s "id:INT_INC,email:STRING" -r 100 -c -f users.csv --target postgres` produces `users.csv`, `users.ddl.postgres.sql`, `users.load.postgres.sql`
+- [ ] `synthtab -s "id:INT_INC,email:STRING" -r 100 -c -f users.csv --target postgres` produces `users.csv`, `users.ddl.postgres.sql`, `users.load.postgres.sql`
 - [ ] Loading the generated bundle into the matching DB succeeds end-to-end for at least Postgres and MySQL (manual smoke test recorded in `docs/DIALECTS.md`)
 - [ ] All five dialects produce DDL that matches `tests/fixtures/dialects/*.expected.sql`
 - [ ] ER-mode + `--target` emits per-entity DDL with FK constraints in topological replay order
@@ -269,7 +269,7 @@ Each milestone follows the TDD workflow (test-first, RED→GREEN→refactor) and
 
 | Risk | Likelihood | Mitigation |
 |---|---|---|
-| Generated value ranges exceed target type (`fake_int()` is `i32::MAX`, doesn't fit MySQL `SMALLINT`) | High | Document safe ranges per gencsv type; defer bounded variants to Phase 2 |
+| Generated value ranges exceed target type (`fake_int()` is `i32::MAX`, doesn't fit MySQL `SMALLINT`) | High | Document safe ranges per synthtab type; defer bounded variants to Phase 2 |
 | Polars 0.38 Parquet writer doesn't expose all logical-type knobs | Medium | Use physical-type defaults where logical types aren't reachable; document gaps |
 | SQL Server `IDENTITY` columns reject inserts without `KEEPIDENTITY` | High | Emit `WITH (KEEPIDENTITY)` in the BULK INSERT template; document in DIALECTS.md |
 | BigQuery `bq` CLI requires `{dataset}` placeholder the user must fill in | Medium | Leave as `dataset` with `# TODO: replace` comment; document in DIALECTS.md |
@@ -292,7 +292,7 @@ Each milestone follows the TDD workflow (test-first, RED→GREEN→refactor) and
 ## 13. References
 
 - ER PRD (sibling): [`er-diagram-generator.prd.md`](./er-diagram-generator.prd.md)
-- Current `gencsv` README: `/README.md`
+- Current `synthtab` README: `/README.md`
 - Current architecture notes: `/CLAUDE.md`
 - MySQL `LOAD DATA`: https://dev.mysql.com/doc/refman/8.0/en/load-data.html
 - Postgres `COPY`: https://www.postgresql.org/docs/current/sql-copy.html

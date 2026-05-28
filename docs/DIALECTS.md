@@ -1,6 +1,6 @@
 # Dialect Support
 
-`gencsv` can emit dialect-correct `CREATE TABLE` DDL and a load-command snippet alongside every generated data file.  Pass `--target <dialect>` to enable this feature.
+`synthtab` can emit dialect-correct `CREATE TABLE` DDL and a load-command snippet alongside every generated data file.  Pass `--target <dialect>` to enable this feature.
 
 ## Supported Dialects
 
@@ -14,7 +14,7 @@
 
 ## SQL Type Mapping
 
-| gencsv type | MySQL | Postgres | SQL Server | BigQuery | Spark |
+| synthtab type | MySQL | Postgres | SQL Server | BigQuery | Spark |
 |---|---|---|---|---|---|
 | `INT_INC` (PK) | `INT AUTO_INCREMENT PRIMARY KEY` | `SERIAL PRIMARY KEY` | `INT IDENTITY(1,1) PRIMARY KEY` | `INT64` | `BIGINT` |
 | `INT_INC` (non-PK) | `INT NOT NULL` | `INTEGER NOT NULL` | `INT NOT NULL` | `INT64` | `BIGINT` |
@@ -103,7 +103,7 @@ spark.read.parquet("users.parquet").write.saveAsTable("users")
 
 ## Parquet Logical Types (BigQuery and Spark)
 
-When using `--format parquet` (ER mode) or `--parquet` (flat mode) with `--target bigquery` or `--target spark`, gencsv emits a warning:
+When using `--format parquet` (ER mode) or `--parquet` (flat mode) with `--target bigquery` or `--target spark`, synthtab emits a warning:
 
 ```
 warning: --target bigquery with --format parquet: review docs/DIALECTS.md for recommended Parquet logical types
@@ -111,7 +111,7 @@ warning: --target bigquery with --format parquet: review docs/DIALECTS.md for re
 
 This warning exists because Parquet physical types must be annotated with the correct logical type to load cleanly into BigQuery and Spark.
 
-| gencsv type | Recommended Parquet logical type |
+| synthtab type | Recommended Parquet logical type |
 |---|---|
 | `DATE` | `DATE` (INT32 with DATE annotation) |
 | `TIME` | `TIME_MILLIS` or `TIME_MICROS` |
@@ -120,11 +120,11 @@ This warning exists because Parquet physical types must be annotated with the co
 | `LAT` / `LON` | `DOUBLE` |
 | `UUID` | `STRING` (UTF8) |
 
-gencsv uses polars to write Parquet, which generally applies correct annotations automatically. Review the Parquet schema with `parquet-tools schema <file>` if you encounter type mismatch errors on load.
+synthtab uses polars to write Parquet, which generally applies correct annotations automatically. Review the Parquet schema with `parquet-tools schema <file>` if you encounter type mismatch errors on load.
 
 ## ER Mode DDL
 
-In `gencsv er` mode, a single `schema.ddl.<dialect>.sql` file is written to the output directory. It contains `CREATE TABLE` statements for all entities in dependency order, plus junction tables for many-to-many relationships.
+In `synthtab er` mode, a single `schema.ddl.<dialect>.sql` file is written to the output directory. It contains `CREATE TABLE` statements for all entities in dependency order, plus junction tables for many-to-many relationships.
 
 Foreign key constraints are emitted for MySQL, PostgreSQL, and SQL Server. BigQuery and Spark do not enforce FK constraints natively, so they are omitted for those dialects.
 
